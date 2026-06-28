@@ -5277,3 +5277,958 @@ Run `nvidia-smi` while training a model and observe:
 - Temperature
 
 ---
+
+# 📘 PyTorch Complete Course
+
+# Module 4 – Automatic Differentiation (Autograd)
+
+> **Level:** Beginner → Intermediate
+
+> **Prerequisites**
+>
+> - PyTorch Installation
+> - Tensors
+> - CUDA Basics
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Story
+- What is Autograd?
+- Why Autograd?
+- Computational Graph
+- Forward Pass
+- Backward Pass
+- Chain Rule
+- requires_grad
+- grad
+- backward()
+- Gradient Accumulation
+- zero_grad()
+- detach()
+- torch.no_grad()
+- Optimizer Flow
+- Custom Autograd
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# Story
+
+Imagine you're training a neural network.
+
+```
+Image
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+Update Weights
+```
+
+But...
+
+How does PyTorch know
+
+```
+Which weight
+
+Should change
+
+And
+
+By how much?
+```
+
+Do we manually calculate
+
+```
+∂Loss/∂W1
+
+∂Loss/∂W2
+
+∂Loss/∂W3
+
+...
+
+Millions of derivatives?
+```
+
+Imagine Llama-3 with
+
+```
+8 Billion Parameters
+```
+
+Would you calculate
+
+```
+8 Billion derivatives
+```
+
+manually?
+
+Impossible.
+
+This is exactly why **Autograd** exists.
+
+---
+
+# What is Autograd?
+
+Autograd is PyTorch's **automatic differentiation engine**.
+
+It automatically
+
+- Tracks operations
+- Builds a computation graph
+- Computes gradients
+- Applies the Chain Rule
+
+without us writing any calculus.
+
+---
+
+# What is a Gradient?
+
+A gradient tells us
+
+> **How much a parameter should change to reduce the loss.**
+
+Imagine climbing a mountain.
+
+```
+Current Position
+
+↓
+
+Slope
+
+↓
+
+Move Downhill
+```
+
+Gradient is simply the slope.
+
+Large Gradient
+
+↓
+
+Large Update
+
+Small Gradient
+
+↓
+
+Small Update
+
+---
+
+# Why Do We Need Gradients?
+
+Suppose
+
+```
+Prediction = 10
+
+Actual = 15
+```
+
+Loss
+
+```
+5
+```
+
+Should we
+
+Increase weight?
+
+Decrease weight?
+
+Keep it same?
+
+Gradient tells us the answer.
+
+---
+
+# Training Flow
+
+```
+Input
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+Gradient
+
+↓
+
+Weight Update
+
+↓
+
+Better Prediction
+```
+
+This repeats thousands of times.
+
+---
+
+# What is a Computational Graph?
+
+Whenever we perform tensor operations,
+
+PyTorch silently creates a graph.
+
+Example
+
+```python
+import torch
+
+x = torch.tensor(2.0, requires_grad=True)
+
+y = x * 3
+
+z = y + 4
+```
+
+Internally
+
+```
+x
+
+↓
+
+×
+
+3
+
+↓
+
++
+
+4
+
+↓
+
+z
+```
+
+PyTorch remembers
+
+every operation.
+
+---
+
+# Why Build This Graph?
+
+Later,
+
+when we call
+
+```python
+z.backward()
+```
+
+PyTorch walks backwards
+
+through this graph
+
+computing gradients.
+
+Hence the name
+
+```
+Backpropagation
+```
+
+---
+
+# Forward Pass
+
+Forward Pass means
+
+```
+Input
+
+↓
+
+Neural Network
+
+↓
+
+Prediction
+```
+
+Example
+
+```python
+x = torch.tensor(2.0)
+
+y = x * 5
+
+print(y)
+```
+
+Output
+
+```
+10
+```
+
+Simple.
+
+---
+
+# Backward Pass
+
+Backward Pass computes gradients.
+
+Example
+
+```python
+import torch
+
+x = torch.tensor(2.0, requires_grad=True)
+
+y = x ** 2
+
+y.backward()
+
+print(x.grad)
+```
+
+Output
+
+```
+tensor(4.)
+```
+
+Why?
+
+Because
+
+```
+y = x²
+
+dy/dx = 2x
+
+2 × 2 = 4
+```
+
+PyTorch did the calculus automatically.
+
+---
+
+# Chain Rule
+
+Suppose
+
+```
+x
+
+↓
+
+×
+
+3
+
+↓
+
++
+
+5
+
+↓
+
+Square
+```
+
+Instead of computing everything together,
+
+PyTorch applies
+
+```
+Chain Rule
+```
+
+step by step.
+
+This allows neural networks with millions of operations to compute gradients efficiently.
+
+---
+
+# requires_grad
+
+Most important parameter.
+
+Default
+
+```python
+False
+```
+
+Example
+
+```python
+a = torch.tensor(5.)
+
+print(a.requires_grad)
+```
+
+Output
+
+```
+False
+```
+
+Now
+
+```python
+a = torch.tensor(
+    5.,
+    requires_grad=True
+)
+```
+
+Output
+
+```
+True
+```
+
+Now PyTorch tracks every operation.
+
+---
+
+# Example
+
+```python
+x = torch.tensor(
+    2.,
+    requires_grad=True
+)
+
+y = x * 4
+
+print(y)
+```
+
+Output
+
+```
+tensor(8.,
+grad_fn=<MulBackward0>)
+```
+
+Notice
+
+```
+grad_fn
+```
+
+This means
+
+Autograd is tracking the operation.
+
+---
+
+# grad_fn
+
+Every operation stores
+
+```
+History
+```
+
+Example
+
+```
+MulBackward
+
+AddBackward
+
+PowBackward
+
+ReluBackward
+```
+
+These functions help build the computation graph.
+
+---
+
+# Leaf Tensor
+
+A tensor directly created by the user with `requires_grad=True` is called a **leaf tensor**.
+
+Example
+
+```python
+x = torch.tensor(3.0, requires_grad=True)
+```
+
+`x` is a leaf tensor.
+
+---
+
+# Non-Leaf Tensor
+
+```python
+y = x * 2
+```
+
+`y` is not a leaf tensor.
+
+It was created from another tensor.
+
+---
+
+# Computing Gradient
+
+Example
+
+```python
+x = torch.tensor(
+    3.,
+    requires_grad=True
+)
+
+y = x ** 2
+
+y.backward()
+
+print(x.grad)
+```
+
+Output
+
+```
+6
+```
+
+Because
+
+```
+dy/dx = 2x
+
+2 × 3 = 6
+```
+
+---
+
+# Multiple Operations
+
+```python
+x = torch.tensor(
+    2.,
+    requires_grad=True
+)
+
+y = x * 5
+
+z = y ** 2
+
+z.backward()
+
+print(x.grad)
+```
+
+Calculation
+
+```
+z=(5x)^2
+
+=25x²
+
+dz/dx
+
+=50x
+
+x=2
+
+100
+```
+
+Output
+
+```
+100
+```
+
+---
+
+# Gradient Accumulation
+
+One very important concept.
+
+Example
+
+```python
+x = torch.tensor(
+    2.,
+    requires_grad=True
+)
+
+y = x ** 2
+
+y.backward()
+
+print(x.grad)
+```
+
+Output
+
+```
+4
+```
+
+Now
+
+```python
+y = x ** 2
+
+y.backward()
+
+print(x.grad)
+```
+
+Output
+
+```
+8
+```
+
+Why?
+
+Because
+
+PyTorch **adds** gradients.
+
+It does NOT replace them.
+
+---
+
+# Why Accumulate?
+
+Useful for
+
+Large Models
+
+Small GPUs
+
+Gradient Accumulation simulates larger batch sizes by summing gradients over multiple forward/backward passes before updating the weights.
+
+---
+
+# zero_grad()
+
+To reset gradients
+
+```python
+optimizer.zero_grad()
+```
+
+Without this
+
+Gradients continue accumulating.
+
+---
+
+# Training Loop
+
+```python
+for epoch in range(epochs):
+
+    optimizer.zero_grad()
+
+    output=model(x)
+
+    loss=criterion(output,y)
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+This is the heart of every PyTorch model.
+
+---
+
+# detach()
+
+Sometimes
+
+we don't want gradients.
+
+Example
+
+```python
+x=torch.tensor(
+    5.,
+    requires_grad=True
+)
+
+y=x.detach()
+
+print(y.requires_grad)
+```
+
+Output
+
+```
+False
+```
+
+Detached tensors are removed from the computation graph.
+
+---
+
+# Why detach()?
+
+Useful when
+
+- Logging values
+- Saving predictions
+- Converting to NumPy
+- Freezing part of a computation
+
+---
+
+# torch.no_grad()
+
+Turns off gradient tracking.
+
+Example
+
+```python
+with torch.no_grad():
+
+    prediction=model(images)
+```
+
+Everything inside the block is executed without building a computation graph.
+
+---
+
+# Why Use no_grad()?
+
+During
+
+```
+Testing
+
+Inference
+
+Validation
+```
+
+We don't train.
+
+So gradients are unnecessary.
+
+Benefits
+
+- Faster
+- Less Memory
+- Better Performance
+
+---
+
+# Difference
+
+| detach() | no_grad() |
+|----------|-----------|
+| Single Tensor | Entire Block |
+| Removes Graph | Doesn't Build Graph |
+| Used During Computation | Used During Inference |
+
+---
+
+# Optimizer Flow
+
+Complete Training Pipeline
+
+```
+Input
+
+↓
+
+Forward Pass
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+Backward()
+
+↓
+
+Gradients
+
+↓
+
+Optimizer.step()
+
+↓
+
+Weights Updated
+
+↓
+
+Repeat
+```
+
+---
+
+# optimizer.step()
+
+Updates weights.
+
+Example
+
+```python
+optimizer.step()
+```
+
+Internally
+
+```
+New Weight
+
+=
+
+Old Weight
+
+-
+
+Learning Rate
+
+×
+
+Gradient
+```
+
+---
+
+# Custom Autograd
+
+PyTorch even allows you to create your own differentiable operations.
+
+```python
+from torch.autograd import Function
+
+class Square(Function):
+
+    @staticmethod
+    def forward(ctx, x):
+
+        ctx.save_for_backward(x)
+
+        return x*x
+
+    @staticmethod
+    def backward(ctx, grad_output):
+
+        x, = ctx.saved_tensors
+
+        return grad_output * 2 * x
+```
+
+This is useful for advanced research and custom mathematical operations.
+
+---
+
+# Common Mistakes
+
+❌ Forgetting `requires_grad=True`
+
+❌ Forgetting `optimizer.zero_grad()`
+
+❌ Calling `backward()` twice without `retain_graph=True`
+
+❌ Using `.numpy()` on a tensor that requires gradients (detach it first)
+
+❌ Performing inference without `torch.no_grad()`
+
+---
+
+# Best Practices
+
+✅ Use `requires_grad=True` only for trainable parameters.
+
+✅ Always call `optimizer.zero_grad()` before `backward()`.
+
+✅ Use `torch.no_grad()` during inference.
+
+✅ Use `detach()` when gradients are not needed.
+
+✅ Inspect `.grad` while debugging.
+
+---
+
+# Summary
+
+- Autograd automatically computes gradients.
+- Gradients tell the optimizer how to update weights.
+- Computational graphs store every operation.
+- `requires_grad=True` enables tracking.
+- `backward()` computes gradients.
+- Gradients accumulate unless cleared.
+- `detach()` removes tensors from the graph.
+- `torch.no_grad()` disables gradient tracking for inference.
+- `optimizer.step()` updates model parameters.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Autograd?
+2. What is a computational graph?
+3. Why do we need gradients?
+4. What does `requires_grad=True` do?
+5. What is `grad_fn`?
+6. Difference between leaf and non-leaf tensors?
+7. Why do gradients accumulate?
+8. What does `optimizer.zero_grad()` do?
+9. Difference between `detach()` and `torch.no_grad()`?
+10. Explain the complete training flow in PyTorch.
+
+---
+
+# 📝 Exercises
+
+1. Create a tensor with `requires_grad=True` and compute its square.
+2. Verify gradient accumulation by calling `backward()` twice.
+3. Reset gradients using `optimizer.zero_grad()`.
+4. Compare `detach()` and `torch.no_grad()` with small examples.
+5. Build a tiny linear model and inspect gradients after one training step.
+
+---
