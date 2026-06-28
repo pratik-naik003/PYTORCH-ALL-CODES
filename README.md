@@ -1386,3 +1386,2265 @@ In **Module 2 – Part 2**, you'll learn how to create tensors using PyTorch fac
 - `torch.full()`
 
 You'll also understand when to use each function in real-world machine learning and LLM workflows.
+
+
+> # Module 3 – CUDA & GPU Computing (Part 1)
+>
+> **Topic:** CPU vs GPU & CUDA Fundamentals
+
+# 📚 Table of Contents
+
+- The Story Behind GPU Computing
+- Why CPU Becomes Slow
+- What is a CPU?
+- What is a GPU?
+- CPU vs GPU
+- Parallel Computing
+- Why Deep Learning Needs GPUs
+- What is CUDA?
+- CUDA Architecture
+- CUDA Cores
+- GPU Memory (VRAM)
+- CUDA Versions
+- NVIDIA Driver
+- CUDA Toolkit
+- cuDNN
+- How PyTorch Uses CUDA
+- Summary
+- Interview Questions
+- Practice Questions
+
+---
+
+# 📖 The Story Behind GPU Computing
+
+Let's travel back a few years.
+
+Imagine you are training a simple neural network.
+
+The dataset contains only
+
+```
+10,000 Images
+```
+
+Each image is
+
+```
+224 × 224 × 3
+```
+
+Your neural network has
+
+```
+15 Million Parameters
+```
+
+Every epoch requires
+
+```
+Forward Pass
+
+↓
+
+Loss Calculation
+
+↓
+
+Backward Pass
+
+↓
+
+Gradient Computation
+
+↓
+
+Weight Update
+```
+
+Now imagine repeating this process
+
+```
+100 Times
+```
+
+Your computer starts slowing down.
+
+Training takes
+
+```
+Hours...
+
+Sometimes Days...
+
+Sometimes Weeks...
+```
+
+The problem wasn't the neural network.
+
+The problem was the hardware.
+
+Researchers realized that CPUs were never designed for performing billions of mathematical operations simultaneously.
+
+A different type of processor was needed.
+
+That processor was the **GPU**.
+
+---
+
+# Why CPUs Become Slow
+
+A CPU is designed to perform many different kinds of tasks.
+
+Examples:
+
+- Opening applications
+- Running operating systems
+- Browsing the internet
+- Playing music
+- Managing files
+
+Because of this, CPUs focus on being **versatile**, not on performing the same mathematical operation millions of times.
+
+Deep learning, however, repeatedly performs operations such as:
+
+```
+Matrix Multiplication
+
+Addition
+
+Multiplication
+
+Activation Functions
+
+Gradient Calculations
+```
+
+These operations are highly repetitive and can be executed in parallel.
+
+---
+
+# What is a CPU?
+
+CPU stands for
+
+> **Central Processing Unit**
+
+It is the brain of your computer.
+
+A modern CPU typically has
+
+```
+4
+
+8
+
+12
+
+16
+
+24
+
+32 Cores
+```
+
+Each core is extremely powerful and optimized for sequential execution.
+
+Example
+
+```
+Task 1
+
+↓
+
+Task 2
+
+↓
+
+Task 3
+
+↓
+
+Task 4
+```
+
+One core completes one task before moving to the next.
+
+This makes CPUs excellent for general-purpose computing.
+
+---
+
+# What is a GPU?
+
+GPU stands for
+
+> **Graphics Processing Unit**
+
+Originally, GPUs were designed to render graphics for games.
+
+Rendering millions of pixels requires performing identical mathematical operations simultaneously.
+
+Manufacturers realized that this architecture is also perfect for deep learning.
+
+Instead of a few powerful cores, GPUs contain **thousands of smaller cores** capable of executing many operations at once.
+
+---
+
+# CPU vs GPU
+
+Imagine you need to solve
+
+```
+10,000 Math Problems
+```
+
+### CPU
+
+You hire
+
+```
+8 Expert Teachers
+```
+
+Each teacher solves one problem at a time.
+
+```
+Teacher 1 → Problem 1
+
+Teacher 2 → Problem 2
+
+Teacher 3 → Problem 3
+...
+```
+
+The teachers are very smart but there are only a few of them.
+
+---
+
+### GPU
+
+Now imagine hiring
+
+```
+10,000 Students
+```
+
+Each student solves one simple problem.
+
+```
+Student 1 → Problem 1
+
+Student 2 → Problem 2
+
+Student 3 → Problem 3
+
+...
+
+Student 10000 → Problem 10000
+```
+
+Each student is slower than a teacher,
+
+but because thousands work simultaneously,
+
+the entire task finishes much faster.
+
+This is exactly how GPUs accelerate deep learning.
+
+---
+
+# CPU vs GPU Comparison
+
+| Feature | CPU | GPU |
+|----------|-----|-----|
+| Full Form | Central Processing Unit | Graphics Processing Unit |
+| Number of Cores | Few (4–32) | Thousands |
+| Optimized For | General Computing | Parallel Computation |
+| Best At | Sequential Tasks | Matrix Operations |
+| Deep Learning | Slow | Extremely Fast |
+| Cost per Computation | Higher | Lower |
+
+---
+
+# Sequential vs Parallel Computing
+
+### Sequential Processing
+
+```
+Task 1
+
+↓
+
+Task 2
+
+↓
+
+Task 3
+
+↓
+
+Task 4
+```
+
+One task finishes before the next begins.
+
+---
+
+### Parallel Processing
+
+```
+Task 1
+
+Task 2
+
+Task 3
+
+Task 4
+
+↓
+
+All execute together
+```
+
+Deep learning relies heavily on parallel processing because matrix operations can be divided across many cores.
+
+---
+
+# Why Neural Networks Love GPUs
+
+Consider multiplying two matrices:
+
+```
+1024 × 1024
+
+×
+
+1024 × 1024
+```
+
+This requires **millions of multiply-add operations**.
+
+A CPU processes these operations using only a limited number of cores.
+
+A GPU distributes the work across thousands of CUDA cores, allowing the computation to complete much faster.
+
+The larger the model, the greater the performance benefit.
+
+---
+
+# What is CUDA?
+
+CUDA stands for
+
+> **Compute Unified Device Architecture**
+
+CUDA is a platform developed by **NVIDIA** that allows programmers to use NVIDIA GPUs for general-purpose computation.
+
+Without CUDA,
+
+your GPU would mainly be used for graphics.
+
+With CUDA,
+
+the GPU can perform machine learning computations.
+
+PyTorch communicates with CUDA to execute tensor operations on NVIDIA GPUs.
+
+---
+
+# CUDA Architecture
+
+```
+                    PyTorch
+
+                       │
+
+                 CUDA Runtime
+
+                       │
+
+                NVIDIA Driver
+
+                       │
+
+                 NVIDIA GPU
+```
+
+When you write:
+
+```python
+tensor = tensor.to("cuda")
+```
+
+PyTorch sends the tensor to the CUDA runtime, which communicates with the NVIDIA driver and executes the computation on the GPU.
+
+---
+
+# CUDA Cores
+
+CUDA cores are the small processing units inside an NVIDIA GPU.
+
+Example:
+
+| GPU | CUDA Cores |
+|------|------------|
+| RTX 3050 | 2560 |
+| RTX 3060 | 3584 |
+| RTX 4060 | 3072 |
+| RTX 4090 | 16384 |
+
+More CUDA cores generally allow more parallel computations, though memory bandwidth and architecture also matter.
+
+---
+
+# GPU Memory (VRAM)
+
+Unlike CPUs, GPUs have their own dedicated memory called **VRAM**.
+
+Examples:
+
+| GPU | VRAM |
+|------|------|
+| RTX 3050 | 8 GB |
+| RTX 3060 | 12 GB |
+| RTX 4060 | 8 GB |
+| RTX 4090 | 24 GB |
+
+During training, VRAM stores:
+
+- Model parameters
+- Input tensors
+- Gradients
+- Optimizer states
+- Intermediate activations
+
+If the required memory exceeds available VRAM, you'll encounter an **Out of Memory (OOM)** error.
+
+---
+
+# NVIDIA Driver
+
+The NVIDIA driver acts as the bridge between the operating system and the GPU.
+
+Without the correct driver, PyTorch cannot communicate with the GPU.
+
+---
+
+# CUDA Toolkit
+
+The CUDA Toolkit includes:
+
+- CUDA Compiler (`nvcc`)
+- Runtime Libraries
+- Development Tools
+- Debugging Utilities
+
+It provides the software environment needed to build and run CUDA applications.
+
+---
+
+# What is cuDNN?
+
+cuDNN stands for
+
+> **CUDA Deep Neural Network Library**
+
+It is a highly optimized library for deep learning operations such as:
+
+- Convolutions
+- Pooling
+- Activation Functions
+- Batch Normalization
+- RNN Operations
+
+Frameworks like PyTorch and TensorFlow use cuDNN internally to speed up neural network training.
+
+---
+
+# How PyTorch Uses CUDA
+
+When you write:
+
+```python
+import torch
+
+x = torch.tensor([1, 2, 3], device="cuda")
+```
+
+PyTorch:
+
+1. Creates the tensor.
+2. Allocates memory on the GPU.
+3. Transfers the data.
+4. Executes future operations on the GPU instead of the CPU.
+
+You don't need to write CUDA code yourself—PyTorch handles the interaction.
+
+---
+
+# Key Takeaways
+
+- CPUs are optimized for general-purpose, sequential computing.
+- GPUs are optimized for parallel numerical computations.
+- Deep learning relies heavily on matrix operations, making GPUs ideal.
+- CUDA enables NVIDIA GPUs to perform general-purpose computation.
+- PyTorch uses CUDA to execute tensor operations on the GPU.
+- VRAM stores tensors, gradients, activations, and model parameters during training.
+- cuDNN provides optimized implementations of common deep learning operations.
+
+---
+
+# 📝 Interview Questions
+
+1. Why are GPUs faster than CPUs for deep learning?
+2. What is CUDA?
+3. What is the role of the CUDA Toolkit?
+4. What is cuDNN?
+5. What is VRAM, and why is it important?
+6. Can PyTorch use a GPU without CUDA?
+7. Explain sequential vs parallel computing.
+8. Why do large language models require GPUs?
+
+---
+
+# 💻 Practice Questions
+
+1. Explain the difference between CPU and GPU in your own words.
+2. Why is matrix multiplication considered a parallel operation?
+3. What components are required for PyTorch to use an NVIDIA GPU?
+4. Research your GPU model and note its CUDA cores and VRAM.
+5. What happens if a model requires more VRAM than is available?
+
+---
+
+> # Module 3 – CUDA & GPU Computing (Part 2)
+>
+> **Topic:** Installing CUDA & Verifying GPU Support
+>
+
+# 📚 Table of Contents
+
+- Introduction
+- Understanding the Software Stack
+- Step 1 – Check Your GPU
+- Step 2 – Install NVIDIA Driver
+- Step 3 – Install PyTorch
+- Step 4 – Verify Installation
+- Checking CUDA Availability
+- Checking GPU Information
+- Understanding CUDA Versions
+- Common Commands
+- Troubleshooting
+- Best Practices
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Introduction
+
+In the previous chapter, we learned that GPUs make Deep Learning significantly faster.
+
+But simply owning an NVIDIA GPU isn't enough.
+
+Your computer needs several software components that work together before PyTorch can use the GPU.
+
+Think of it like driving a car.
+
+Having the car alone isn't enough.
+
+You also need:
+
+- Fuel
+- Engine
+- Driver
+- Roads
+
+Similarly, PyTorch needs several components before it can communicate with your GPU.
+
+---
+
+# Understanding the Software Stack
+
+When you execute
+
+```python
+tensor = tensor.to("cuda")
+```
+
+many things happen behind the scenes.
+
+```
+Your Python Code
+        │
+        ▼
+     PyTorch
+        │
+        ▼
+ CUDA Runtime Libraries
+        │
+        ▼
+ NVIDIA Driver
+        │
+        ▼
+ NVIDIA GPU
+```
+
+Every layer has an important responsibility.
+
+If even one layer is missing,
+
+PyTorch cannot use the GPU.
+
+---
+
+# What Do We Need?
+
+To use GPU acceleration, we generally need:
+
+✅ NVIDIA GPU
+
+↓
+
+✅ NVIDIA Driver
+
+↓
+
+✅ PyTorch (CUDA Build)
+
+Notice something interesting.
+
+You **do not always need to install the full CUDA Toolkit** just to train models.
+
+Modern PyTorch wheels already include the CUDA runtime libraries they require.
+
+---
+
+# Step 1 — Check Your GPU
+
+Before installing anything, verify that your computer actually has an NVIDIA GPU.
+
+### Windows
+
+Open
+
+```
+Task Manager
+
+↓
+
+Performance
+
+↓
+
+GPU
+```
+
+Example
+
+```
+GPU 0
+
+NVIDIA RTX 4060
+```
+
+---
+
+Another method
+
+Open Command Prompt
+
+```bash
+nvidia-smi
+```
+
+If installed correctly, you'll see something like
+
+```
++----------------------------------+
+
+NVIDIA-SMI 580.xx
+
+Driver Version: 580.xx
+
+CUDA Version: 13.x
+
+GPU Memory
+
+Processes
+
++----------------------------------+
+```
+
+---
+
+If you receive
+
+```
+'nvidia-smi' is not recognized
+```
+
+then either
+
+- NVIDIA driver is missing
+- Driver installation failed
+- PATH issue
+
+---
+
+# Step 2 — Install the NVIDIA Driver
+
+The driver is the bridge between your operating system and the GPU.
+
+Without it,
+
+PyTorch cannot communicate with the hardware.
+
+Always download drivers from the official NVIDIA website:
+
+```
+https://www.nvidia.com/download/
+```
+
+Select:
+
+- GPU Series
+- GPU Model
+- Operating System
+
+Download
+
+Install
+
+Restart your computer.
+
+---
+
+# Verify Driver Installation
+
+Open Command Prompt
+
+```bash
+nvidia-smi
+```
+
+Expected output
+
+```
+GPU Name
+
+Driver Version
+
+CUDA Version
+
+Memory Usage
+
+Temperature
+
+Power Usage
+```
+
+This confirms your operating system can communicate with the GPU.
+
+---
+
+# Step 3 — Install PyTorch
+
+Visit
+
+```
+https://pytorch.org/get-started/locally/
+```
+
+Choose
+
+```
+Operating System
+
+Package Manager
+
+Python
+
+CUDA Version
+```
+
+The website automatically generates the correct installation command.
+
+Example
+
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+```
+
+This installs the CUDA-enabled build of PyTorch.
+
+---
+
+# Why Don't We Install CUDA Toolkit First?
+
+Many beginners think
+
+```
+CUDA Toolkit
+
+↓
+
+PyTorch
+```
+
+is mandatory.
+
+In reality,
+
+most users only need
+
+```
+NVIDIA Driver
+
+↓
+
+CUDA-enabled PyTorch
+```
+
+PyTorch ships with the CUDA runtime it needs.
+
+You only need the full CUDA Toolkit when:
+
+- Writing CUDA C++ code
+- Building custom CUDA extensions
+- Developing GPU kernels
+
+---
+
+# Step 4 — Verify Installation
+
+Create
+
+```
+check_gpu.py
+```
+
+```python
+import torch
+
+print(torch.__version__)
+```
+
+Output
+
+```
+2.x.x
+```
+
+---
+
+# Is CUDA Available?
+
+```python
+import torch
+
+print(torch.cuda.is_available())
+```
+
+Output
+
+```
+True
+```
+
+means
+
+PyTorch successfully detected your GPU.
+
+If
+
+```
+False
+```
+
+then PyTorch is using the CPU.
+
+---
+
+# How Many GPUs?
+
+```python
+import torch
+
+print(torch.cuda.device_count())
+```
+
+Example
+
+```
+1
+```
+
+If your workstation has multiple GPUs,
+
+you may see
+
+```
+4
+```
+
+or
+
+```
+8
+```
+
+---
+
+# Current GPU
+
+```python
+import torch
+
+print(torch.cuda.current_device())
+```
+
+Output
+
+```
+0
+```
+
+GPU numbering starts from
+
+```
+0
+```
+
+---
+
+# GPU Name
+
+```python
+import torch
+
+print(torch.cuda.get_device_name(0))
+```
+
+Example
+
+```
+NVIDIA GeForce RTX 4060
+```
+
+---
+
+# Complete Example
+
+```python
+import torch
+
+print("PyTorch Version :", torch.__version__)
+print("CUDA Available :", torch.cuda.is_available())
+print("GPU Count :", torch.cuda.device_count())
+
+if torch.cuda.is_available():
+
+    print("Current GPU :", torch.cuda.current_device())
+
+    print("GPU Name :", torch.cuda.get_device_name(0))
+```
+
+Example Output
+
+```
+PyTorch Version : 2.8.0
+
+CUDA Available : True
+
+GPU Count : 1
+
+Current GPU : 0
+
+GPU Name : NVIDIA RTX 4060
+```
+
+---
+
+# Understanding CUDA Versions
+
+Many beginners confuse these three versions.
+
+There are actually three different version numbers.
+
+```
+NVIDIA Driver Version
+
+↓
+
+CUDA Runtime Version
+
+↓
+
+PyTorch CUDA Build
+```
+
+Example
+
+```
+Driver
+
+580.xx
+```
+
+```
+CUDA Runtime
+
+13.0
+```
+
+```
+PyTorch
+
+cu128
+```
+
+These are related,
+
+but they are **not the same thing**.
+
+---
+
+# Check CUDA Version Used by PyTorch
+
+```python
+import torch
+
+print(torch.version.cuda)
+```
+
+Example
+
+```
+12.8
+```
+
+This shows the CUDA version against which PyTorch was built.
+
+---
+
+# Check cuDNN Version
+
+```python
+import torch
+
+print(torch.backends.cudnn.version())
+```
+
+Example
+
+```
+9200
+```
+
+This confirms cuDNN is available.
+
+---
+
+# Device Object
+
+Instead of writing
+
+```python
+"cuda"
+```
+
+everywhere,
+
+PyTorch recommends using
+
+```python
+device = torch.device(
+    "cuda" if torch.cuda.is_available()
+    else "cpu"
+)
+```
+
+Now
+
+```python
+print(device)
+```
+
+Output
+
+```
+cuda
+```
+
+or
+
+```
+cpu
+```
+
+This makes your code portable across systems with and without GPUs.
+
+---
+
+# Visual Workflow
+
+```
+Install Driver
+
+↓
+
+Install PyTorch
+
+↓
+
+Import torch
+
+↓
+
+Check CUDA
+
+↓
+
+Detect GPU
+
+↓
+
+Train Models
+```
+
+---
+
+# Common Commands
+
+Check GPU
+
+```python
+torch.cuda.is_available()
+```
+
+GPU Count
+
+```python
+torch.cuda.device_count()
+```
+
+Current GPU
+
+```python
+torch.cuda.current_device()
+```
+
+GPU Name
+
+```python
+torch.cuda.get_device_name(0)
+```
+
+CUDA Version
+
+```python
+torch.version.cuda
+```
+
+cuDNN Version
+
+```python
+torch.backends.cudnn.version()
+```
+
+---
+
+# Common Problems
+
+## Problem 1
+
+```
+CUDA Available : False
+```
+
+Possible Reasons
+
+- NVIDIA driver missing
+- Wrong PyTorch build
+- Unsupported GPU
+- Driver too old
+
+---
+
+## Problem 2
+
+```
+Torch not compiled with CUDA enabled
+```
+
+Reason
+
+You installed the CPU-only version of PyTorch.
+
+Solution
+
+Install the CUDA-enabled wheel from the official PyTorch website.
+
+---
+
+## Problem 3
+
+```
+nvidia-smi not found
+```
+
+Reason
+
+Driver isn't installed correctly.
+
+---
+
+## Problem 4
+
+```
+No NVIDIA GPU detected
+```
+
+Possible reasons
+
+- Laptop using integrated graphics
+- Driver issue
+- GPU disabled in BIOS
+- Hardware not present
+
+---
+
+# Best Practices
+
+✅ Always install drivers from NVIDIA.
+
+✅ Always copy the installation command from the official PyTorch website.
+
+✅ Use virtual environments for projects.
+
+✅ Check `torch.cuda.is_available()` before training.
+
+✅ Write device-independent code using `torch.device()`.
+
+---
+
+# Summary
+
+In this chapter, you learned:
+
+- How the GPU software stack works.
+- Why the NVIDIA driver is required.
+- How to install a CUDA-enabled version of PyTorch.
+- How to verify GPU support.
+- How to inspect CUDA, cuDNN, and GPU information.
+- Common installation problems and how to troubleshoot them.
+
+At this point, your system is ready to execute PyTorch programs on the GPU.
+
+---
+
+# 🎯 Interview Questions
+
+1. What is the role of the NVIDIA Driver?
+2. What is `nvidia-smi`?
+3. Does PyTorch always require the CUDA Toolkit?
+4. What does `torch.cuda.is_available()` do?
+5. What is the difference between Driver Version and CUDA Version?
+6. How can you check the number of GPUs?
+7. How do you write device-independent PyTorch code?
+8. Why is `torch.device()` recommended?
+
+---
+
+# 📝 Practice Exercises
+
+### Exercise 1
+
+Print your GPU name.
+
+---
+
+### Exercise 2
+
+Print the CUDA version used by PyTorch.
+
+---
+
+### Exercise 3
+
+Print the cuDNN version.
+
+---
+
+### Exercise 4
+
+Create a `device` object and print whether your program is using CPU or GPU.
+
+---
+
+### Exercise 5
+
+Run `nvidia-smi` and identify:
+
+- Driver Version
+- CUDA Version
+- GPU Memory
+- GPU Name
+
+---
+
+# 🚀 What's Next?
+
+In **Module 3 – Part 3**, we'll finally start using the GPU in code.
+
+You'll learn:
+
+- `tensor.to()`
+- `.cuda()`
+- `.cpu()`
+- Moving entire models to GPU
+- Common device mismatch errors
+- Writing GPU-compatible training loops
+- Performance tips and best practices
+
+This is where your PyTorch programs begin taking advantage of GPU acceleration.
+
+
+# Module 3 – CUDA & GPU Computing (Part 3)
+
+> **Topic:** Moving Tensors & Models to GPU
+
+**Goal**
+
+By the end of this chapter you will learn
+
+- Why tensors need to move to GPU
+- What is `torch.device`
+- How `.to()` works
+- How `.cuda()` works
+- How `.cpu()` works
+- Moving complete models
+- Device-independent programming
+- Common CUDA errors
+- Best Practices
+
+---
+
+# Story
+
+Imagine you bought an expensive RTX 4090 GPU.
+
+You installed
+
+- CUDA
+- PyTorch
+- NVIDIA Drivers
+
+Everything is ready.
+
+Now you write
+
+```python
+import torch
+
+x = torch.tensor([1,2,3])
+
+print(x)
+```
+
+Output
+
+```
+tensor([1,2,3])
+```
+
+You think
+
+> "Great! My GPU is working."
+
+Actually...
+
+**No.**
+
+Your tensor is still stored inside **CPU RAM**.
+
+Your GPU hasn't done any work yet.
+
+Until you explicitly move a tensor to the GPU,
+
+PyTorch continues using the CPU.
+
+This is one of the biggest beginner mistakes.
+
+---
+
+# CPU Memory vs GPU Memory
+
+Your computer has two different memories.
+
+```
+                Computer
+
+          +-----------------+
+
+          |     CPU RAM     |
+
+          +-----------------+
+
+                 ↑
+
+          Stores Normal Data
+
+                 ↓
+
+          +-----------------+
+
+          |    GPU VRAM     |
+
+          +-----------------+
+
+           Stores GPU Data
+```
+
+A tensor cannot exist in both places simultaneously.
+
+It must be stored on
+
+- CPU
+
+OR
+
+- GPU
+
+---
+
+# Why Move Tensors?
+
+Suppose we have
+
+```
+Input Image
+
+↓
+
+Neural Network
+
+↓
+
+Prediction
+```
+
+If
+
+Input is on CPU
+
+and
+
+Model is on GPU
+
+PyTorch doesn't know how to perform operations.
+
+Both must exist on the **same device**.
+
+---
+
+# Device
+
+A **Device** tells PyTorch
+
+> "Where should this tensor live?"
+
+Possible devices
+
+```
+cpu
+```
+
+or
+
+```
+cuda
+```
+
+---
+
+# Creating a Device Object
+
+Instead of writing
+
+```python
+"cuda"
+```
+
+everywhere,
+
+PyTorch recommends
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+```
+
+Now
+
+```python
+print(device)
+```
+
+Output
+
+```
+cuda
+```
+
+or
+
+```
+cpu
+```
+
+---
+
+# Why Use torch.device()?
+
+Imagine
+
+Laptop A
+
+```
+RTX 4060
+```
+
+Laptop B
+
+```
+No GPU
+```
+
+If your code contains
+
+```python
+tensor.cuda()
+```
+
+Laptop B will crash.
+
+Instead,
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+```
+
+works on both systems.
+
+This is called
+
+**Device Independent Programming**
+
+---
+
+# Moving Tensor to GPU
+
+CPU Tensor
+
+```python
+import torch
+
+x = torch.tensor([1,2,3])
+
+print(x.device)
+```
+
+Output
+
+```
+cpu
+```
+
+Move
+
+```python
+x = x.to("cuda")
+```
+
+Now
+
+```python
+print(x.device)
+```
+
+Output
+
+```
+cuda:0
+```
+
+---
+
+# Using Device Variable
+
+Instead of
+
+```python
+x.to("cuda")
+```
+
+write
+
+```python
+x = x.to(device)
+```
+
+Advantages
+
+- Portable
+- Cleaner
+- Recommended
+
+---
+
+# .to()
+
+General Syntax
+
+```python
+tensor.to(device)
+```
+
+Example
+
+```python
+device = torch.device("cuda")
+
+x = torch.tensor([1,2,3])
+
+x = x.to(device)
+```
+
+---
+
+# .cuda()
+
+Shortcut
+
+```python
+x = x.cuda()
+```
+
+Same as
+
+```python
+x.to("cuda")
+```
+
+---
+
+Example
+
+```python
+x = torch.tensor([10,20])
+
+x = x.cuda()
+```
+
+Output Device
+
+```
+cuda:0
+```
+
+---
+
+# .cpu()
+
+Moves tensor back
+
+```python
+x = x.cpu()
+```
+
+Now
+
+```
+GPU
+
+↓
+
+CPU
+```
+
+Example
+
+```python
+x = x.cpu()
+```
+
+Output
+
+```
+cpu
+```
+
+---
+
+# Complete Example
+
+```python
+import torch
+
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+
+x = torch.tensor([1,2,3])
+
+print(x.device)
+
+x = x.to(device)
+
+print(x.device)
+```
+
+Possible Output
+
+```
+cpu
+
+cuda:0
+```
+
+---
+
+# Creating Tensor Directly on GPU
+
+Instead of
+
+```python
+x = torch.tensor([1,2,3])
+
+x = x.to(device)
+```
+
+You can directly write
+
+```python
+x = torch.tensor(
+    [1,2,3],
+    device=device
+)
+```
+
+Much faster.
+
+---
+
+# Multiple Tensors
+
+```python
+a = torch.rand(5,5).to(device)
+
+b = torch.rand(5,5).to(device)
+
+c = a + b
+```
+
+Everything happens on GPU.
+
+---
+
+# Checking Tensor Device
+
+```python
+print(a.device)
+```
+
+Output
+
+```
+cuda:0
+```
+
+---
+
+# Moving Neural Network
+
+Tensor is not enough.
+
+The model also needs GPU.
+
+Example
+
+```python
+model = MyModel()
+```
+
+Move
+
+```python
+model = model.to(device)
+```
+
+Now
+
+Every layer
+
+Every parameter
+
+Every weight
+
+moves to GPU.
+
+---
+
+# Complete Flow
+
+```
+Dataset
+
+↓
+
+Tensor
+
+↓
+
+Move Tensor
+
+↓
+
+Move Model
+
+↓
+
+Forward Pass
+
+↓
+
+Loss
+
+↓
+
+Backward Pass
+
+↓
+
+Optimizer
+```
+
+---
+
+# Training Example
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+
+model = MyModel()
+
+model = model.to(device)
+
+for images, labels in train_loader:
+
+    images = images.to(device)
+
+    labels = labels.to(device)
+
+    outputs = model(images)
+
+    loss = criterion(outputs, labels)
+
+    optimizer.zero_grad()
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+This is the standard PyTorch training loop.
+
+---
+
+# Why Labels Also Move?
+
+Many beginners only move
+
+```
+Images
+```
+
+to GPU.
+
+But
+
+Loss Function compares
+
+```
+Prediction
+
+↓
+
+Label
+```
+
+If labels remain on CPU,
+
+PyTorch throws an error.
+
+---
+
+# Common Error
+
+```
+Expected all tensors to be
+on the same device
+```
+
+Reason
+
+```
+Tensor
+
+↓
+
+GPU
+
+Model
+
+↓
+
+CPU
+```
+
+or
+
+```
+Input
+
+↓
+
+GPU
+
+Labels
+
+↓
+
+CPU
+```
+
+Everything must be on
+
+```
+Same Device
+```
+
+---
+
+# Wrong Example
+
+```python
+images = images.cuda()
+
+outputs = model(images)
+```
+
+Model
+
+```
+CPU
+```
+
+Images
+
+```
+GPU
+```
+
+Runtime Error
+
+---
+
+# Correct Example
+
+```python
+model = model.to(device)
+
+images = images.to(device)
+
+labels = labels.to(device)
+```
+
+Now
+
+Everything
+
+```
+GPU
+```
+
+---
+
+# Checking Model Device
+
+```python
+next(model.parameters()).device
+```
+
+Output
+
+```
+cuda:0
+```
+
+Very useful while debugging.
+
+---
+
+# Device Independent Code
+
+Always write
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+```
+
+Never
+
+```python
+device="cuda"
+```
+
+Because
+
+Someone may run your code
+
+without GPU.
+
+---
+
+# Performance Tip
+
+Bad
+
+```python
+for i in range(1000):
+
+    x = x.to(device)
+```
+
+Good
+
+```python
+x = x.to(device)
+
+for i in range(1000):
+
+    prediction = model(x)
+```
+
+Move tensors only once whenever possible.
+
+---
+
+# Real World Example
+
+LLM Fine Tuning
+
+```
+Tokenizer
+
+↓
+
+Input IDs
+
+↓
+
+GPU
+
+↓
+
+Llama Model
+
+↓
+
+GPU
+
+↓
+
+Output
+
+↓
+
+Loss
+
+↓
+
+Backward
+```
+
+Everything stays on GPU.
+
+If not,
+
+Training becomes extremely slow.
+
+---
+
+# Best Practices
+
+✅ Create one global device object.
+
+✅ Move model only once.
+
+✅ Move tensors before computation.
+
+✅ Keep tensors on same device.
+
+✅ Don't move tensors repeatedly.
+
+✅ Use `.to(device)` instead of `.cuda()`.
+
+---
+
+# Common Mistakes
+
+❌ Model on CPU
+
+Tensor on GPU
+
+---
+
+❌ Label on CPU
+
+Prediction on GPU
+
+---
+
+❌ Forgetting
+
+```python
+model.to(device)
+```
+
+---
+
+❌ Writing
+
+```python
+device="cuda"
+```
+
+instead of
+
+```python
+torch.device(...)
+```
+
+---
+
+# Summary
+
+In this chapter we learned
+
+- CPU and GPU memory
+- Device object
+- `.to()`
+- `.cuda()`
+- `.cpu()`
+- Moving tensors
+- Moving models
+- Device-independent code
+- Common runtime errors
+- Best practices
+
+You can now execute PyTorch programs efficiently on both CPU and GPU.
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a tensor on CPU.
+
+Print its device.
+
+Move it to GPU.
+
+Print again.
+
+---
+
+### Exercise 2
+
+Create
+
+```
+1000 × 1000
+```
+
+tensor.
+
+Move it to GPU.
+
+---
+
+### Exercise 3
+
+Create two GPU tensors.
+
+Add them.
+
+Print output.
+
+---
+
+### Exercise 4
+
+Move a simple neural network to GPU.
+
+---
+
+### Exercise 5
+
+Print
+
+```
+next(model.parameters()).device
+```
+
+---
+
+# 🎤 Interview Questions
+
+1. Why do tensors need to be moved to GPU?
+2. Difference between `.cuda()` and `.to()`?
+3. Why is `torch.device()` recommended?
+4. What causes **Expected all tensors to be on the same device**?
+5. How do you move a complete model to GPU?
+6. How do you move tensors back to CPU?
+7. Why shouldn't `.to(device)` be called repeatedly inside a loop?
+8. What is device-independent programming?
+
+---
