@@ -13145,3 +13145,920 @@ Model
 inside one checkpoint.
 
 ---
+
+# Module 13 – Transfer Learning & Fine-Tuning
+
+> **Goal:** Learn how to use pretrained deep learning models, freeze layers, fine-tune networks, and understand how transfer learning is used in modern AI and LLMs.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Transfer Learning?
+- What is Transfer Learning?
+- Why Does It Work?
+- Feature Extraction
+- Fine-Tuning
+- Pretrained Models
+- torchvision Models
+- Loading Pretrained Models
+- Freezing Layers
+- Unfreezing Layers
+- Replacing the Classification Head
+- Fine-Tuning Workflow
+- Practical Example
+- Transfer Learning in NLP
+- Transfer Learning in LLMs
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you want to learn
+
+```
+Spanish
+```
+
+but you already know
+
+```
+English
+```
+
+Learning Spanish becomes much easier because
+
+you already understand
+
+- Grammar
+- Sentence Structure
+- Vocabulary Concepts
+
+You don't start from zero.
+
+Instead,
+
+you reuse your previous knowledge.
+
+Deep Learning works the same way.
+
+Instead of training a model from scratch,
+
+we reuse knowledge from a model
+
+already trained on millions of images.
+
+This idea is called
+
+> **Transfer Learning**
+
+---
+
+# What is Transfer Learning?
+
+Transfer Learning means
+
+> Using knowledge learned from one task to solve another task.
+
+Example
+
+```
+ImageNet
+
+↓
+
+ResNet
+
+↓
+
+Your Cat vs Dog Dataset
+```
+
+Instead of training
+
+```
+25 Million Parameters
+```
+
+from scratch,
+
+we only train
+
+a few layers.
+
+---
+
+# Why Do We Need Transfer Learning?
+
+Training a Deep Learning model from scratch requires
+
+- Huge datasets
+- Powerful GPUs
+- Long training time
+
+Example
+
+Training
+
+```
+ResNet-50
+
+↓
+
+ImageNet
+
+↓
+
+Millions of Images
+
+↓
+
+Days of Training
+```
+
+Instead,
+
+we download
+
+a pretrained model
+
+and fine-tune it.
+
+---
+
+# What is a Pretrained Model?
+
+A pretrained model is a model
+
+that has already been trained
+
+on a very large dataset.
+
+Examples
+
+```
+ResNet
+
+EfficientNet
+
+MobileNet
+
+DenseNet
+
+ViT
+```
+
+Most computer vision models
+
+are pretrained on
+
+```
+ImageNet
+```
+
+which contains
+
+```
+14 Million+
+
+Images
+```
+
+---
+
+# Why Do Pretrained Models Work?
+
+The first layers of CNNs
+
+learn
+
+```
+Edges
+
+↓
+
+Textures
+
+↓
+
+Shapes
+
+↓
+
+Patterns
+```
+
+These features are useful
+
+for almost every vision task.
+
+So,
+
+instead of learning
+
+them again,
+
+we reuse them.
+
+---
+
+# Transfer Learning Pipeline
+
+```
+Large Dataset
+
+↓
+
+Train Model
+
+↓
+
+Save Weights
+
+↓
+
+New Dataset
+
+↓
+
+Load Weights
+
+↓
+
+Fine-Tune
+
+↓
+
+New Model
+```
+
+---
+
+# Two Approaches
+
+Transfer Learning mainly has
+
+```
+Feature Extraction
+
+↓
+
+Fine-Tuning
+```
+
+---
+
+# Feature Extraction
+
+Only train
+
+the final layer.
+
+Everything else
+
+remains frozen.
+
+```
+Pretrained Layers
+
+↓
+
+Frozen
+
+↓
+
+New Classifier
+
+↓
+
+Train
+```
+
+Advantages
+
+✅ Faster
+
+✅ Less GPU Memory
+
+✅ Small Dataset Friendly
+
+---
+
+# Fine-Tuning
+
+Instead of training
+
+only the last layer,
+
+we also train
+
+some of the pretrained layers.
+
+```
+Pretrained Model
+
+↓
+
+Unfreeze Last Layers
+
+↓
+
+Continue Training
+```
+
+Advantages
+
+- Better Accuracy
+- Learns Dataset Specific Features
+
+---
+
+# torchvision Models
+
+PyTorch provides
+
+many pretrained models
+
+through
+
+```python
+torchvision.models
+```
+
+Popular models
+
+- ResNet18
+- ResNet50
+- VGG16
+- AlexNet
+- DenseNet
+- EfficientNet
+- Vision Transformer (ViT)
+- MobileNet
+
+---
+
+# Loading a Pretrained Model
+
+```python
+from torchvision.models import resnet18
+
+model = resnet18(weights="DEFAULT")
+```
+
+PyTorch automatically downloads
+
+the pretrained weights.
+
+---
+
+# Exploring the Model
+
+```python
+print(model)
+```
+
+This prints
+
+all layers
+
+of the network.
+
+---
+
+# Freezing Layers
+
+Freeze means
+
+```
+Don't Update Weights
+```
+
+Example
+
+```python
+for param in model.parameters():
+
+    param.requires_grad = False
+```
+
+Now
+
+Backpropagation
+
+will ignore
+
+these layers.
+
+---
+
+# Checking Frozen Parameters
+
+```python
+for name, param in model.named_parameters():
+
+    print(
+
+        name,
+
+        param.requires_grad
+
+    )
+```
+
+Output
+
+```
+layer1.weight False
+
+layer2.weight False
+```
+
+---
+
+# Why Freeze Layers?
+
+Imagine
+
+```
+25 Million Parameters
+```
+
+Training
+
+all of them
+
+requires
+
+- More Memory
+- More Time
+- More Data
+
+Freezing
+
+reduces
+
+training cost.
+
+---
+
+# Replace Final Layer
+
+ImageNet
+
+has
+
+```
+1000 Classes
+```
+
+Suppose
+
+your dataset
+
+has only
+
+```
+2 Classes
+```
+
+Replace
+
+the final classifier.
+
+Example
+
+```python
+import torch.nn as nn
+
+model.fc = nn.Linear(
+
+512,
+
+2
+
+)
+```
+
+Now
+
+the network predicts
+
+```
+Cat
+
+Dog
+```
+
+instead of
+
+1000 ImageNet classes.
+
+---
+
+# Train Only Final Layer
+
+```python
+optimizer = torch.optim.Adam(
+
+model.fc.parameters(),
+
+lr=0.001
+)
+```
+
+Only
+
+the new classifier
+
+learns.
+
+Everything else
+
+remains frozen.
+
+---
+
+# Fine-Tuning Last Layers
+
+Later
+
+we may decide
+
+to train
+
+the final block.
+
+Example
+
+```python
+for param in model.layer4.parameters():
+
+    param.requires_grad = True
+```
+
+Now
+
+Layer 4
+
+also learns.
+
+---
+
+# Complete Example
+
+```python
+from torchvision.models import resnet18
+
+import torch.nn as nn
+
+model = resnet18(weights="DEFAULT")
+
+for param in model.parameters():
+
+    param.requires_grad = False
+
+model.fc = nn.Linear(
+
+512,
+
+2
+)
+
+optimizer = torch.optim.Adam(
+
+model.fc.parameters(),
+
+lr=0.001
+)
+```
+
+---
+
+# Training Workflow
+
+```
+Load Model
+
+↓
+
+Freeze Layers
+
+↓
+
+Replace Head
+
+↓
+
+Train Classifier
+
+↓
+
+Evaluate
+
+↓
+
+(Optional)
+
+Fine-Tune More Layers
+```
+
+---
+
+# Feature Extraction vs Fine-Tuning
+
+| Feature Extraction | Fine-Tuning |
+|--------------------|-------------|
+| Freeze Backbone | Train Backbone |
+| Fast | Slower |
+| Less Data Needed | More Data Needed |
+| Lower GPU Usage | Higher GPU Usage |
+| Beginner Friendly | Better Accuracy |
+
+---
+
+# Transfer Learning in NLP
+
+Transfer Learning
+
+isn't limited
+
+to Computer Vision.
+
+Example
+
+```
+BERT
+
+↓
+
+Fine-Tune
+
+↓
+
+Sentiment Analysis
+```
+
+or
+
+```
+GPT
+
+↓
+
+Fine-Tune
+
+↓
+
+Chatbot
+```
+
+---
+
+# Transfer Learning in LLMs
+
+Modern LLMs
+
+are almost never
+
+trained
+
+from scratch.
+
+Instead
+
+```
+Llama
+
+↓
+
+Instruction Dataset
+
+↓
+
+Fine-Tuning
+
+↓
+
+Chat Model
+```
+
+or
+
+```
+Qwen
+
+↓
+
+Medical Dataset
+
+↓
+
+Fine-Tuning
+
+↓
+
+Medical Assistant
+```
+
+This is
+
+Transfer Learning.
+
+---
+
+# Relation with LoRA
+
+Traditional Fine-Tuning
+
+```
+Train
+
+Every Parameter
+```
+
+LoRA
+
+```
+Freeze Model
+
+↓
+
+Train Small Adapters
+```
+
+We'll study
+
+LoRA
+
+later
+
+during
+
+LLM Fine-Tuning.
+
+---
+
+# Real World Examples
+
+| Task | Model |
+|-------|-------|
+| Image Classification | ResNet |
+| Face Recognition | EfficientNet |
+| Medical Imaging | DenseNet |
+| OCR | ViT |
+| Sentiment Analysis | BERT |
+| Chatbot | Llama |
+| Code Generation | Qwen |
+
+---
+
+# Best Practices
+
+✅ Start with pretrained models.
+
+✅ Freeze layers when dataset is small.
+
+✅ Replace the classifier layer.
+
+✅ Use a lower learning rate for fine-tuning.
+
+✅ Unfreeze gradually if needed.
+
+---
+
+# Common Mistakes
+
+❌ Forgetting to replace the final layer.
+
+❌ Training all parameters unnecessarily.
+
+❌ Using a high learning rate during fine-tuning.
+
+❌ Forgetting to freeze pretrained layers.
+
+---
+
+# Cheat Sheet
+
+| Task | Code |
+|------|------|
+| Load Model | `resnet18(weights="DEFAULT")` |
+| Freeze Layers | `param.requires_grad=False` |
+| Replace Classifier | `model.fc = nn.Linear(...)` |
+| Train Head Only | `optimizer = Adam(model.fc.parameters())` |
+| Unfreeze Layers | `param.requires_grad=True` |
+
+---
+
+# Summary
+
+- Transfer Learning reuses knowledge from pretrained models.
+- Feature Extraction freezes most of the model and trains only the final layers.
+- Fine-Tuning updates some or all pretrained layers.
+- Pretrained models reduce training time and data requirements.
+- Transfer Learning is used in both Computer Vision and NLP.
+- Modern LLM fine-tuning is a form of Transfer Learning.
+
+---
+
+# 🤖 How This Applies to LLMs
+
+Traditional CNN
+
+```
+ImageNet
+
+↓
+
+ResNet
+
+↓
+
+Fine-Tune
+```
+
+LLMs
+
+```
+Pretrained Llama
+
+↓
+
+LoRA
+
+↓
+
+Instruction Dataset
+
+↓
+
+Fine-Tuned Chatbot
+```
+
+The idea is exactly the same.
+
+The only difference is
+
+the architecture.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Transfer Learning?
+2. Why do we use pretrained models?
+3. Difference between Feature Extraction and Fine-Tuning?
+4. What is `requires_grad` used for?
+5. Why replace the final classifier?
+6. Why use a smaller learning rate for fine-tuning?
+7. What is a pretrained model?
+8. How is Transfer Learning used in LLMs?
+9. What is the difference between Full Fine-Tuning and LoRA?
+10. Why are pretrained models preferred over training from scratch?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Load
+
+```
+ResNet18
+```
+
+and print its architecture.
+
+---
+
+### Exercise 2
+
+Freeze all layers.
+
+---
+
+### Exercise 3
+
+Replace the final classification layer.
+
+---
+
+### Exercise 4
+
+Train only the new classifier.
+
+---
+
+### Exercise 5
+
+Unfreeze the final ResNet block and compare the results with feature extraction.
+
+---
