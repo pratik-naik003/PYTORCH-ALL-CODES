@@ -15197,3 +15197,1214 @@ Observe how the output size changes.
 Replace Max Pooling with Average Pooling and compare model performance.
 
 ---
+
+# Module 15 – Recurrent Neural Networks (RNN, LSTM & GRU)
+
+> **Goal:** Learn how neural networks process sequential data, understand why RNNs were invented, explore the limitations of traditional RNNs, and master LSTM & GRU before moving to the Attention Mechanism and Transformers.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why CNNs Fail on Sequential Data
+- What is Sequential Data?
+- What is an RNN?
+- How RNN Works
+- Hidden State
+- Unrolling an RNN
+- Backpropagation Through Time (BPTT)
+- Vanishing Gradient Problem
+- Exploding Gradient Problem
+- Gradient Clipping
+- Long Short-Term Memory (LSTM)
+- Gates in LSTM
+- Gated Recurrent Unit (GRU)
+- RNN vs LSTM vs GRU
+- PyTorch Implementation
+- Practical Example
+- Applications
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you are reading this sentence
+
+```
+I grew up in France.
+
+I speak fluent ______.
+```
+
+Can you guess the missing word?
+
+Probably
+
+```
+French
+```
+
+How?
+
+Because
+
+your brain remembers
+
+the previous sentence.
+
+Now imagine a neural network.
+
+It receives
+
+```
+I
+
+↓
+
+grew
+
+↓
+
+up
+
+↓
+
+in
+
+↓
+
+France
+```
+
+If it forgets the previous words,
+
+it cannot predict
+
+```
+French.
+```
+
+Unlike images,
+
+language has
+
+```
+Order
+
+Context
+
+Memory
+```
+
+CNNs don't naturally remember previous inputs.
+
+This is why
+
+Recurrent Neural Networks
+
+were invented.
+
+---
+
+# Why CNNs Fail for Text
+
+Suppose
+
+Sentence
+
+```
+I love Deep Learning
+```
+
+If we shuffle
+
+the words
+
+```
+Learning Deep love I
+```
+
+the meaning changes completely.
+
+Word order matters.
+
+Images
+
+↓
+
+Pixels nearby matter.
+
+Language
+
+↓
+
+Previous words matter.
+
+CNNs are designed for
+
+spatial relationships,
+
+not
+
+time-dependent sequences.
+
+---
+
+# What is Sequential Data?
+
+Sequential Data
+
+means
+
+```
+Current Input
+
+depends on
+
+Previous Inputs.
+```
+
+Examples
+
+- Sentences
+- Speech
+- Time Series
+- Stock Prices
+- Music
+- DNA
+- Sensor Data
+
+---
+
+# Traditional Neural Network
+
+```
+Input
+
+↓
+
+Prediction
+```
+
+Every input
+
+is treated
+
+independently.
+
+There is
+
+no memory.
+
+---
+
+# What is an RNN?
+
+An RNN is a neural network
+
+that has
+
+memory.
+
+Instead of forgetting
+
+previous inputs,
+
+it stores
+
+information
+
+inside
+
+```
+Hidden State
+```
+
+---
+
+# Hidden State
+
+Think of Hidden State
+
+as
+
+the model's memory.
+
+```
+Word1
+
+↓
+
+Memory
+
+↓
+
+Word2
+
+↓
+
+Updated Memory
+
+↓
+
+Word3
+
+↓
+
+Updated Memory
+```
+
+Every new word
+
+updates
+
+the hidden state.
+
+---
+
+# RNN Architecture
+
+```
+Input1
+
+↓
+
+RNN Cell
+
+↓
+
+Hidden State
+
+↓
+
+Input2
+
+↓
+
+RNN Cell
+
+↓
+
+Hidden State
+
+↓
+
+Input3
+
+↓
+
+Prediction
+```
+
+The same RNN cell
+
+is reused
+
+for every time step.
+
+---
+
+# Unrolling an RNN
+
+Internally,
+
+an RNN looks like
+
+```
+x₁
+
+↓
+
+[RNN]
+
+↓
+
+h₁
+
+↓
+
+x₂
+
+↓
+
+[RNN]
+
+↓
+
+h₂
+
+↓
+
+x₃
+
+↓
+
+[RNN]
+
+↓
+
+h₃
+
+↓
+
+Output
+```
+
+Notice
+
+the weights
+
+are shared
+
+at every step.
+
+---
+
+# Mathematical Idea
+
+At every time step
+
+```
+Current Input
+
++
+
+Previous Memory
+
+↓
+
+New Memory
+
+↓
+
+Prediction
+```
+
+Formula
+
+```
+hₜ = f(xₜ , hₜ₋₁)
+```
+
+Where
+
+```
+xₜ
+
+Current Input
+
+hₜ₋₁
+
+Previous Hidden State
+
+hₜ
+
+New Hidden State
+```
+
+---
+
+# Example
+
+Sentence
+
+```
+I
+
+love
+
+AI
+```
+
+Processing
+
+```
+"I"
+
+↓
+
+Hidden State₁
+
+↓
+
+"love"
+
+↓
+
+Hidden State₂
+
+↓
+
+"AI"
+
+↓
+
+Hidden State₃
+```
+
+The final hidden state
+
+contains
+
+information
+
+about
+
+the entire sentence.
+
+---
+
+# Backpropagation Through Time (BPTT)
+
+CNN
+
+uses
+
+Backpropagation.
+
+RNN
+
+uses
+
+```
+Backpropagation
+
+Through Time
+
+(BPTT)
+```
+
+Instead of moving
+
+backward
+
+through layers,
+
+it moves
+
+backward
+
+through
+
+time steps.
+
+---
+
+# Vanishing Gradient Problem
+
+Imagine
+
+a sentence
+
+with
+
+500 words.
+
+During training,
+
+gradients must travel
+
+from
+
+Word 500
+
+↓
+
+Word 1
+
+Eventually,
+
+they become
+
+very small.
+
+```
+1
+
+↓
+
+0.1
+
+↓
+
+0.01
+
+↓
+
+0.001
+
+↓
+
+0.000001
+```
+
+Learning stops.
+
+This is called
+
+```
+Vanishing Gradient
+```
+
+---
+
+# Exploding Gradient
+
+Sometimes
+
+gradients become
+
+too large.
+
+```
+1
+
+↓
+
+10
+
+↓
+
+100
+
+↓
+
+1000
+```
+
+Training becomes unstable.
+
+---
+
+# Gradient Clipping
+
+Solution
+
+Limit
+
+gradient values.
+
+PyTorch
+
+```python
+torch.nn.utils.clip_grad_norm_(
+
+model.parameters(),
+
+max_norm=1.0
+
+)
+```
+
+This prevents
+
+very large updates.
+
+---
+
+# Long Short-Term Memory (LSTM)
+
+LSTM was introduced
+
+to solve
+
+the vanishing gradient problem.
+
+Instead of
+
+one memory,
+
+it maintains
+
+```
+Hidden State
+
++
+
+Cell State
+```
+
+Cell State
+
+acts like
+
+long-term memory.
+
+---
+
+# LSTM Architecture
+
+```
+Input
+
+↓
+
+Forget Gate
+
+↓
+
+Input Gate
+
+↓
+
+Cell State
+
+↓
+
+Output Gate
+
+↓
+
+Prediction
+```
+
+Three gates
+
+control
+
+information flow.
+
+---
+
+# Forget Gate
+
+Question
+
+```
+What should I forget?
+```
+
+Example
+
+```
+Yesterday's Weather
+
+↓
+
+Not Important
+
+↓
+
+Forget
+```
+
+---
+
+# Input Gate
+
+Question
+
+```
+What should I remember?
+```
+
+Example
+
+```
+User Name
+
+↓
+
+Important
+
+↓
+
+Store
+```
+
+---
+
+# Output Gate
+
+Question
+
+```
+What should I send
+
+to the next step?
+```
+
+---
+
+# Why LSTM Works Better
+
+Instead of
+
+forgetting everything,
+
+LSTM learns
+
+what to
+
+remember
+
+and
+
+what to forget.
+
+This allows it to model
+
+long-term dependencies
+
+much better than a basic RNN.
+
+---
+
+# GRU (Gated Recurrent Unit)
+
+GRU
+
+is a simplified
+
+LSTM.
+
+It has
+
+```
+Update Gate
+
+Reset Gate
+```
+
+instead of
+
+three gates.
+
+Advantages
+
+- Faster
+- Fewer Parameters
+- Less Memory
+- Easier Training
+
+---
+
+# RNN vs LSTM vs GRU
+
+| Feature | RNN | LSTM | GRU |
+|----------|-----|------|------|
+| Memory | Small | Long-Term | Long-Term |
+| Vanishing Gradient | Yes | Mostly Solved | Mostly Solved |
+| Speed | Fast | Slower | Faster |
+| Parameters | Few | Many | Medium |
+| Accuracy | Lower | High | High |
+
+---
+
+# Creating an RNN
+
+```python
+import torch.nn as nn
+
+rnn = nn.RNN(
+
+input_size=100,
+
+hidden_size=128,
+
+num_layers=2,
+
+batch_first=True
+
+)
+```
+
+---
+
+# Creating an LSTM
+
+```python
+lstm = nn.LSTM(
+
+input_size=100,
+
+hidden_size=128,
+
+num_layers=2,
+
+batch_first=True
+
+)
+```
+
+---
+
+# Creating a GRU
+
+```python
+gru = nn.GRU(
+
+input_size=100,
+
+hidden_size=128,
+
+num_layers=2,
+
+batch_first=True
+
+)
+```
+
+---
+
+# Example Input
+
+Suppose
+
+```
+Batch Size = 32
+
+Sentence Length = 20
+
+Embedding Size = 100
+```
+
+Tensor Shape
+
+```python
+x = torch.randn(
+
+32,
+
+20,
+
+100
+
+)
+```
+
+---
+
+# Forward Pass
+
+```python
+output,
+
+hidden = rnn(x)
+```
+
+Output Shape
+
+```
+(32,
+
+20,
+
+128)
+```
+
+---
+
+# LSTM Forward Pass
+
+```python
+output,
+
+(hidden, cell)
+
+= lstm(x)
+```
+
+Notice
+
+LSTM returns
+
+```
+Hidden State
+
++
+
+Cell State
+```
+
+---
+
+# Complete Example
+
+```python
+import torch
+import torch.nn as nn
+
+class SentimentRNN(nn.Module):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.rnn = nn.LSTM(
+
+            input_size=300,
+
+            hidden_size=128,
+
+            batch_first=True
+
+        )
+
+        self.fc = nn.Linear(
+
+            128,
+
+            2
+
+        )
+
+    def forward(self,x):
+
+        output,
+
+        (hidden,cell)
+
+        = self.rnn(x)
+
+        output = self.fc(
+
+            hidden[-1]
+
+        )
+
+        return output
+```
+
+---
+
+# Applications
+
+RNNs
+
+are used in
+
+- Text Classification
+- Machine Translation
+- Speech Recognition
+- Chatbots
+- Sentiment Analysis
+- Stock Prediction
+- Time Series Forecasting
+- Weather Prediction
+
+---
+
+# Why RNNs Became Less Popular
+
+RNNs process
+
+one token
+
+after another.
+
+```
+Token1
+
+↓
+
+Token2
+
+↓
+
+Token3
+```
+
+Cannot process
+
+all tokens
+
+in parallel.
+
+Training becomes
+
+slow.
+
+Transformers
+
+solve this problem
+
+using
+
+```
+Self-Attention
+```
+
+---
+
+# RNN vs Transformer
+
+| RNN | Transformer |
+|------|-------------|
+| Sequential Processing | Parallel Processing |
+| Hidden State | Self-Attention |
+| Slow Training | Fast Training |
+| Difficult Long Context | Excellent Long Context |
+| Older NLP Models | Modern LLMs |
+
+---
+
+# Best Practices
+
+✅ Use LSTM instead of vanilla RNN for most sequence tasks.
+
+✅ Apply gradient clipping for long sequences.
+
+✅ Pad variable-length sequences before batching.
+
+✅ Use embeddings for text instead of one-hot vectors.
+
+---
+
+# Common Mistakes
+
+❌ Using vanilla RNN for long documents.
+
+❌ Forgetting gradient clipping.
+
+❌ Ignoring sequence lengths.
+
+❌ Expecting RNNs to scale like Transformers.
+
+---
+
+# Cheat Sheet
+
+| Layer | Purpose |
+|--------|----------|
+| `nn.RNN` | Basic Recurrent Network |
+| `nn.LSTM` | Long-Term Memory |
+| `nn.GRU` | Efficient Memory |
+| Hidden State | Short-Term Memory |
+| Cell State | Long-Term Memory |
+| Gradient Clipping | Prevent Exploding Gradients |
+
+---
+
+# 🤖 How This Connects to LLMs
+
+Early NLP
+
+```
+Text
+
+↓
+
+RNN
+
+↓
+
+Prediction
+```
+
+Later
+
+```
+Text
+
+↓
+
+LSTM
+
+↓
+
+Prediction
+```
+
+Today
+
+```
+Text
+
+↓
+
+Transformer
+
+↓
+
+Llama
+
+↓
+
+GPT
+
+↓
+
+Gemma
+
+↓
+
+Qwen
+```
+
+Understanding RNNs
+
+helps you understand
+
+**why Transformers were invented.**
+
+---
+
+# Summary
+
+- RNNs process sequential data by maintaining a hidden state.
+- Vanilla RNNs struggle with long-term dependencies because of the vanishing gradient problem.
+- LSTMs introduce cell states and gates to preserve important information over long sequences.
+- GRUs simplify LSTMs while retaining much of their performance.
+- Although Transformers dominate modern NLP, RNNs remain useful for understanding sequence modeling and are still applied in some time-series and resource-constrained scenarios.
+
+---
+
+# 🎤 Interview Questions
+
+1. Why were RNNs invented?
+2. What is sequential data?
+3. What is a hidden state?
+4. What is Backpropagation Through Time (BPTT)?
+5. Explain the vanishing gradient problem.
+6. Why are LSTMs better than vanilla RNNs?
+7. Difference between LSTM and GRU?
+8. Why do Transformers outperform RNNs?
+9. What is gradient clipping?
+10. When would you choose a GRU over an LSTM?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create an `nn.RNN` layer and pass a dummy input through it.
+
+---
+
+### Exercise 2
+
+Replace the RNN with an LSTM and compare the outputs.
+
+---
+
+### Exercise 3
+
+Build a sentiment classifier using an LSTM.
+
+---
+
+### Exercise 4
+
+Experiment with different values of:
+
+- Hidden Size
+- Number of Layers
+- Sequence Length
+
+Observe how they affect the model.
+
+---
+
+### Exercise 5
+
+Compare the training time of an RNN, LSTM, and GRU on the same toy dataset.
+
+---
