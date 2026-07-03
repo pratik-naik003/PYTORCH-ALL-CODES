@@ -22776,3 +22776,1028 @@ Tokenize and decode five different sentences.
 Load a small Llama, Gemma, or Qwen model (if you have access and sufficient hardware) and generate text from a simple prompt.
 
 ---
+
+
+# 📘 PyTorch Complete Course
+
+# Module 19 – Tokenization (Deep Dive)
+
+> **Goal**
+>
+> Understand how Large Language Models convert human language into numbers, learn the most popular tokenization algorithms, and master concepts like vocabulary, padding, truncation, attention masks, and context windows.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Tokenization?
+- Characters vs Words vs Tokens
+- Vocabulary
+- Token IDs
+- Special Tokens
+- Byte Pair Encoding (BPE)
+- WordPiece
+- SentencePiece
+- Unigram Tokenizer
+- Attention Mask
+- Padding
+- Truncation
+- Context Window
+- Practical Examples
+- Hugging Face Tokenizer
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine you meet someone who only understands numbers.
+
+You say
+
+```
+Hello
+```
+
+They don't understand.
+
+Instead,
+
+you create a dictionary.
+
+```
+Hello
+
+↓
+
+1254
+
+World
+
+↓
+
+998
+
+AI
+
+↓
+
+4521
+```
+
+Now,
+
+instead of sending
+
+```
+Hello AI
+```
+
+you send
+
+```
+1254
+
+4521
+```
+
+The person understands.
+
+LLMs work exactly the same way.
+
+They **never read text directly.**
+
+They only understand
+
+```
+Numbers
+```
+
+---
+
+# Why Tokenization?
+
+Computers cannot understand
+
+```
+Hello
+
+World
+
+Artificial Intelligence
+```
+
+They understand
+
+```
+124
+
+522
+
+890
+```
+
+So,
+
+before text enters
+
+the model,
+
+it must be
+
+converted into
+
+numbers.
+
+This process is called
+
+```
+Tokenization
+```
+
+---
+
+# Complete Pipeline
+
+```
+Sentence
+
+↓
+
+Tokenizer
+
+↓
+
+Token IDs
+
+↓
+
+Embeddings
+
+↓
+
+Transformer
+
+↓
+
+Prediction
+```
+
+---
+
+# Character-Level Tokenization
+
+Every character
+
+becomes one token.
+
+Example
+
+```
+Hello
+```
+
+↓
+
+```
+H
+
+e
+
+l
+
+l
+
+o
+```
+
+Advantages
+
+- Small Vocabulary
+
+Disadvantages
+
+- Very Long Sequences
+
+---
+
+# Word-Level Tokenization
+
+Each word
+
+becomes
+
+one token.
+
+Example
+
+```
+I Love AI
+```
+
+↓
+
+```
+I
+
+Love
+
+AI
+```
+
+Advantages
+
+- Short Sequences
+
+Disadvantages
+
+Unknown words become a problem.
+
+Example
+
+```
+ChatGPT123XYZ
+```
+
+The tokenizer
+
+may not recognize it.
+
+---
+
+# Subword Tokenization
+
+Modern LLMs
+
+use
+
+```
+Subwords
+```
+
+instead of
+
+characters
+
+or
+
+complete words.
+
+Example
+
+```
+Unbelievable
+```
+
+↓
+
+```
+Un
+
+believ
+
+able
+```
+
+Advantages
+
+✅ Smaller Vocabulary
+
+✅ Handles New Words
+
+✅ Better Generalization
+
+---
+
+# Vocabulary
+
+Vocabulary
+
+is
+
+the complete list
+
+of known tokens.
+
+Example
+
+| Token | ID |
+|-------|----|
+| Hello | 101 |
+| AI | 205 |
+| World | 999 |
+
+Vocabulary size
+
+depends
+
+on the model.
+
+Examples
+
+| Model | Vocabulary |
+|---------|------------|
+| GPT-2 | ~50K |
+| BERT | ~30K |
+| Llama | ~128K |
+| Gemma | ~256K (varies by version) |
+
+---
+
+# Token IDs
+
+Sentence
+
+```
+Hello World
+```
+
+↓
+
+```
+101
+
+999
+```
+
+These numbers
+
+are sent
+
+to the model.
+
+---
+
+# Embeddings
+
+Token IDs
+
+don't contain
+
+meaning.
+
+Embedding Layer
+
+converts
+
+them
+
+into vectors.
+
+```
+101
+
+↓
+
+[0.23
+
+-0.55
+
+...]
+
+```
+
+Now
+
+the Transformer
+
+can process them.
+
+---
+
+# Special Tokens
+
+Most tokenizers
+
+use
+
+special tokens.
+
+| Token | Purpose |
+|---------|----------|
+| `[PAD]` | Padding |
+| `[CLS]` | Classification |
+| `[SEP]` | Separator |
+| `[MASK]` | Masked Language Modeling |
+| `<bos>` | Beginning of Sentence |
+| `<eos>` | End of Sentence |
+
+Different models
+
+use
+
+different tokens.
+
+---
+
+# Byte Pair Encoding (BPE)
+
+One of
+
+the most popular
+
+tokenization algorithms.
+
+Used by
+
+- GPT-2
+- RoBERTa
+- Many GPT-style models
+
+Idea
+
+Start
+
+with
+
+characters.
+
+Gradually
+
+merge
+
+frequently occurring pairs.
+
+Example
+
+```
+L
+
+o
+
+w
+```
+
+↓
+
+```
+Lo
+
+↓
+
+Low
+```
+
+Frequently occurring combinations
+
+become
+
+single tokens.
+
+---
+
+# WordPiece
+
+Developed by Google.
+
+Used in
+
+```
+BERT
+```
+
+Example
+
+```
+Playing
+```
+
+↓
+
+```
+Play
+
+##
+
+ing
+```
+
+The prefix
+
+```
+##
+```
+
+means
+
+continuation
+
+of the previous token.
+
+---
+
+# SentencePiece
+
+Created by Google.
+
+Unlike
+
+BPE,
+
+it doesn't require
+
+splitting
+
+on spaces first.
+
+Used in
+
+- T5
+- ALBERT
+- Llama (SentencePiece-based tokenizer)
+
+Works well
+
+for multilingual
+
+languages.
+
+---
+
+# Unigram Tokenizer
+
+Instead of
+
+merging tokens,
+
+it starts
+
+with
+
+many candidates
+
+and
+
+removes
+
+less useful ones.
+
+Used in
+
+some modern models.
+
+---
+
+# Comparison
+
+| Algorithm | Used By |
+|------------|----------|
+| BPE | GPT-2 |
+| WordPiece | BERT |
+| SentencePiece | T5, Llama |
+| Unigram | Some multilingual models |
+
+---
+
+# Tokenization Example
+
+```python
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained(
+
+    "gpt2"
+
+)
+
+text = "I love Artificial Intelligence."
+
+tokens = tokenizer(text)
+
+print(tokens)
+```
+
+Output
+
+```
+input_ids
+
+attention_mask
+```
+
+---
+
+# Decoding
+
+```python
+decoded = tokenizer.decode(
+
+    tokens["input_ids"]
+
+)
+
+print(decoded)
+```
+
+Numbers
+
+↓
+
+Back
+
+to
+
+text.
+
+---
+
+# Padding
+
+Suppose
+
+Sentence A
+
+```
+I Love AI
+```
+
+Sentence B
+
+```
+Artificial Intelligence is changing the world.
+```
+
+Different lengths.
+
+Models
+
+prefer
+
+uniform batch shapes.
+
+Padding
+
+adds
+
+extra tokens.
+
+Example
+
+```
+I Love AI [PAD] [PAD]
+```
+
+---
+
+# Padding in Hugging Face
+
+```python
+tokenizer(
+
+    text,
+
+    padding=True
+
+)
+```
+
+---
+
+# Truncation
+
+Suppose
+
+Maximum Length
+
+```
+128 Tokens
+```
+
+Input
+
+contains
+
+```
+500 Tokens
+```
+
+The tokenizer
+
+cuts
+
+the extra tokens.
+
+```python
+tokenizer(
+
+    text,
+
+    truncation=True
+
+)
+```
+
+---
+
+# Attention Mask
+
+Padding
+
+should not
+
+affect
+
+predictions.
+
+Attention Mask
+
+tells
+
+the model
+
+which tokens
+
+are real.
+
+Example
+
+Sentence
+
+```
+Hello World PAD PAD
+```
+
+Mask
+
+```
+1
+
+1
+
+0
+
+0
+```
+
+Meaning
+
+```
+1
+
+Real Token
+
+0
+
+Ignore
+```
+
+---
+
+# Context Window
+
+Every LLM
+
+has
+
+a maximum
+
+number
+
+of tokens
+
+it can process.
+
+Examples
+
+| Model | Approximate Context |
+|---------|---------------------|
+| GPT-2 | 1024 |
+| Llama 2 | 4096 |
+| Llama 3 | Larger than Llama 2 (varies by version) |
+| Gemma | Model-dependent |
+| Qwen | Model-dependent |
+
+Longer context
+
+↓
+
+More memory
+
+↓
+
+Higher computation.
+
+---
+
+# Complete Example
+
+```python
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained(
+
+    "gpt2"
+
+)
+
+text = "Transformers changed AI forever."
+
+encoded = tokenizer(
+
+    text,
+
+    padding=True,
+
+    truncation=True,
+
+    return_tensors="pt"
+
+)
+
+print(encoded["input_ids"])
+
+print(encoded["attention_mask"])
+
+decoded = tokenizer.decode(
+
+    encoded["input_ids"][0],
+
+    skip_special_tokens=True
+
+)
+
+print(decoded)
+```
+
+---
+
+# Complete Workflow
+
+```
+Sentence
+
+↓
+
+Tokenizer
+
+↓
+
+Token IDs
+
+↓
+
+Padding
+
+↓
+
+Attention Mask
+
+↓
+
+Embeddings
+
+↓
+
+Transformer
+```
+
+---
+
+# Best Practices
+
+✅ Use the tokenizer that matches the model.
+
+✅ Enable truncation for long inputs.
+
+✅ Use attention masks with padded sequences.
+
+✅ Be aware of the model's context window.
+
+---
+
+# Common Mistakes
+
+❌ Using the wrong tokenizer.
+
+❌ Ignoring attention masks.
+
+❌ Assuming words and tokens are the same.
+
+❌ Exceeding the model's maximum context length.
+
+---
+
+# Cheat Sheet
+
+| Concept | Purpose |
+|----------|----------|
+| Vocabulary | Token Dictionary |
+| Token ID | Numerical Representation |
+| Embedding | Dense Vector |
+| Padding | Equal Sequence Length |
+| Truncation | Cut Long Sequences |
+| Attention Mask | Ignore Padding |
+| Context Window | Maximum Tokens |
+
+---
+
+# 🤖 How This Connects to LLM Fine-Tuning
+
+During fine-tuning,
+
+your dataset
+
+```
+Text
+
+↓
+
+Tokenizer
+
+↓
+
+Input IDs
+
+↓
+
+Attention Mask
+
+↓
+
+Model
+
+↓
+
+Loss
+
+↓
+
+Training
+```
+
+Without proper
+
+tokenization,
+
+LLM fine-tuning
+
+cannot begin.
+
+---
+
+# Summary
+
+- LLMs process token IDs, not raw text.
+- Tokenization converts text into numerical IDs.
+- Modern LLMs primarily use subword tokenization.
+- Padding and attention masks enable efficient batch processing.
+- Truncation keeps inputs within the model's context window.
+- Choosing the correct tokenizer is essential for successful inference and fine-tuning.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is tokenization?
+2. Why don't LLMs read text directly?
+3. Difference between characters, words, and tokens?
+4. What is BPE?
+5. What is WordPiece?
+6. What is SentencePiece?
+7. Why is padding required?
+8. What is an attention mask?
+9. What is a context window?
+10. Why must the tokenizer match the model?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Tokenize five different sentences using GPT-2's tokenizer.
+
+---
+
+### Exercise 2
+
+Print the input IDs and attention masks.
+
+---
+
+### Exercise 3
+
+Compare the tokenization of the same sentence using GPT-2 and BERT.
+
+---
+
+### Exercise 4
+
+Experiment with different values of `max_length`, `padding`, and `truncation`.
+
+---
+
+### Exercise 5
+
+Research the tokenizer used by:
+
+- Llama 3
+- Gemma
+- Qwen
+- DeepSeek
+
+---
+
+
