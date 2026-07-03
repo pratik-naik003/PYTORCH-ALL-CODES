@@ -21804,3 +21804,975 @@ Identify whether they are encoder-only, decoder-only, or encoder-decoder.
 Draw the complete Transformer architecture from memory.
 
 ---
+
+
+
+# Module 18 – Hugging Face Transformers
+
+> **Goal**
+>
+> Learn the Hugging Face ecosystem from scratch, understand how pretrained Transformer models are loaded, tokenized, and used for inference, and prepare for LLM fine-tuning.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is Hugging Face?
+- Why Hugging Face?
+- Transformers Library
+- Datasets Library
+- Tokenizers Library
+- Hub
+- Installing Libraries
+- Pipeline API
+- AutoTokenizer
+- AutoModel
+- AutoModelForCausalLM
+- AutoModelForSequenceClassification
+- AutoModelForTokenClassification
+- Loading Llama
+- Loading Gemma
+- Loading Qwen
+- Text Generation
+- Chat Templates
+- Device Mapping
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you want to build
+
+ChatGPT.
+
+Option 1
+
+Train
+
+```
+7 Billion Parameters
+
+from scratch.
+```
+
+Need
+
+- Hundreds of GPUs
+- Millions of Dollars
+- Months of Training
+
+Impossible
+
+for most developers.
+
+---
+
+Option 2
+
+Download
+
+a pretrained model
+
+```
+Llama
+
+Gemma
+
+Qwen
+
+Mistral
+```
+
+and start
+
+building immediately.
+
+This is
+
+what
+
+Hugging Face
+
+makes possible.
+
+---
+
+# What is Hugging Face?
+
+Hugging Face
+
+is an AI platform
+
+that provides
+
+```
+Models
+
+Datasets
+
+Tokenizers
+
+Libraries
+```
+
+for Machine Learning
+
+and
+
+Large Language Models.
+
+Think of it as
+
+```
+GitHub
+
+for AI Models.
+```
+
+---
+
+# Why Hugging Face?
+
+Without Hugging Face
+
+you would need
+
+to implement
+
+```
+Tokenizer
+
+↓
+
+Transformer
+
+↓
+
+Weights
+
+↓
+
+Generation
+
+↓
+
+Inference
+```
+
+yourself.
+
+With Hugging Face
+
+you simply
+
+write
+
+```python
+from transformers import AutoModel
+```
+
+and load
+
+state-of-the-art models.
+
+---
+
+# Hugging Face Ecosystem
+
+```
+Hugging Face
+
+│
+
+├── Transformers
+
+├── Datasets
+
+├── Tokenizers
+
+├── Hub
+
+├── Accelerate
+
+├── PEFT
+
+├── TRL
+
+└── Diffusers
+```
+
+We'll learn
+
+each of these
+
+later.
+
+---
+
+# Transformers Library
+
+The most popular library.
+
+Provides
+
+- GPT
+- BERT
+- Llama
+- Gemma
+- Qwen
+- Mistral
+- T5
+- BART
+
+and many more.
+
+Install
+
+```bash
+pip install transformers
+```
+
+---
+
+# Datasets Library
+
+Used for
+
+loading datasets.
+
+```bash
+pip install datasets
+```
+
+Example
+
+```python
+from datasets import load_dataset
+```
+
+---
+
+# Tokenizers Library
+
+Fast tokenization
+
+written in Rust.
+
+```bash
+pip install tokenizers
+```
+
+---
+
+# Accelerate
+
+Used for
+
+multi-GPU
+
+training.
+
+```bash
+pip install accelerate
+```
+
+---
+
+# PEFT
+
+Parameter Efficient Fine Tuning.
+
+Contains
+
+```
+LoRA
+
+QLoRA
+
+IA3
+
+AdaLoRA
+```
+
+Install
+
+```bash
+pip install peft
+```
+
+---
+
+# TRL
+
+Transformer Reinforcement Learning
+
+Library.
+
+Used for
+
+- SFT
+- PPO
+- DPO
+- RLHF
+
+Install
+
+```bash
+pip install trl
+```
+
+---
+
+# Pipeline API
+
+Fastest way
+
+to use
+
+an AI model.
+
+```python
+from transformers import pipeline
+
+generator = pipeline(
+
+    "text-generation",
+
+    model="gpt2"
+
+)
+
+result = generator(
+
+    "Artificial Intelligence is",
+
+    max_new_tokens=30
+
+)
+
+print(result)
+```
+
+One function
+
+loads
+
+```
+Tokenizer
+
++
+
+Model
+```
+
+automatically.
+
+---
+
+# AutoTokenizer
+
+Every model
+
+has
+
+its own tokenizer.
+
+Instead of
+
+remembering
+
+different classes,
+
+we use
+
+```python
+from transformers import AutoTokenizer
+```
+
+Example
+
+```python
+tokenizer = AutoTokenizer.from_pretrained(
+
+    "gpt2"
+
+)
+```
+
+---
+
+# Tokenization
+
+Sentence
+
+```
+I love AI
+```
+
+becomes
+
+```
+[40,
+
+1842,
+
+9552]
+```
+
+The model
+
+understands
+
+numbers,
+
+not words.
+
+---
+
+# Encoding Text
+
+```python
+text = "Hello World"
+
+tokens = tokenizer(
+
+    text,
+
+    return_tensors="pt"
+
+)
+
+print(tokens)
+```
+
+Output
+
+contains
+
+```
+input_ids
+
+attention_mask
+```
+
+---
+
+# Decoding
+
+```python
+sentence = tokenizer.decode(
+
+    tokens["input_ids"][0]
+
+)
+
+print(sentence)
+```
+
+Converts
+
+numbers
+
+back
+
+into text.
+
+---
+
+# AutoModel
+
+Loads
+
+the base Transformer
+
+without
+
+any task-specific head.
+
+```python
+from transformers import AutoModel
+
+model = AutoModel.from_pretrained(
+
+    "bert-base-uncased"
+
+)
+```
+
+Used mainly for
+
+feature extraction
+
+and embeddings.
+
+---
+
+# AutoModelForCausalLM
+
+Loads
+
+language models
+
+used for
+
+text generation.
+
+Examples
+
+- GPT
+- Llama
+- Gemma
+- Qwen
+- Mistral
+
+```python
+from transformers import AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "gpt2"
+
+)
+```
+
+---
+
+# AutoModelForSequenceClassification
+
+Used for
+
+classification.
+
+Example
+
+```
+Positive
+
+Negative
+```
+
+```python
+from transformers import AutoModelForSequenceClassification
+
+model = AutoModelForSequenceClassification.from_pretrained(
+
+    "bert-base-uncased",
+
+    num_labels=2
+
+)
+```
+
+---
+
+# AutoModelForTokenClassification
+
+Used for
+
+Named Entity Recognition.
+
+Example
+
+```
+John
+
+↓
+
+Person
+
+Paris
+
+↓
+
+Location
+```
+
+---
+
+# Loading Llama
+
+```python
+from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM
+
+model_name = "meta-llama/Llama-3.2-1B"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+model = AutoModelForCausalLM.from_pretrained(model_name)
+```
+
+---
+
+# Loading Gemma
+
+```python
+model_name = "google/gemma-2-2b"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+model = AutoModelForCausalLM.from_pretrained(model_name)
+```
+
+---
+
+# Loading Qwen
+
+```python
+model_name = "Qwen/Qwen2.5-1.5B"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+model = AutoModelForCausalLM.from_pretrained(model_name)
+```
+
+---
+
+# Generating Text
+
+```python
+inputs = tokenizer(
+
+    "Artificial Intelligence",
+
+    return_tensors="pt"
+
+)
+
+outputs = model.generate(
+
+    **inputs,
+
+    max_new_tokens=50
+
+)
+
+print(
+
+    tokenizer.decode(
+
+        outputs[0],
+
+        skip_special_tokens=True
+
+    )
+)
+```
+
+---
+
+# Chat Templates
+
+Modern chat models
+
+expect
+
+structured conversations.
+
+Example
+
+```python
+messages = [
+
+    {
+
+        "role":"user",
+
+        "content":"Explain AI"
+
+    }
+
+]
+
+prompt = tokenizer.apply_chat_template(
+
+    messages,
+
+    tokenize=False,
+
+    add_generation_prompt=True
+
+)
+```
+
+This formats the conversation in the way the model expects.
+
+---
+
+# Device Mapping
+
+Large models
+
+may not fit
+
+on one GPU.
+
+Hugging Face
+
+can automatically
+
+place layers
+
+on available hardware.
+
+```python
+model = AutoModelForCausalLM.from_pretrained(
+
+    model_name,
+
+    device_map="auto"
+
+)
+```
+
+---
+
+# Model Loading Flow
+
+```
+Model Name
+
+↓
+
+Download Config
+
+↓
+
+Download Tokenizer
+
+↓
+
+Download Weights
+
+↓
+
+Load Model
+
+↓
+
+Inference
+```
+
+---
+
+# Popular Auto Classes
+
+| Class | Purpose |
+|--------|----------|
+| AutoTokenizer | Tokenization |
+| AutoModel | Base Model |
+| AutoModelForCausalLM | Text Generation |
+| AutoModelForSeqClassification | Classification |
+| AutoModelForTokenClassification | NER |
+
+---
+
+# Popular Hugging Face Libraries
+
+| Library | Purpose |
+|----------|----------|
+| transformers | Models |
+| datasets | Data |
+| tokenizers | Fast Tokenization |
+| accelerate | Multi-GPU |
+| peft | LoRA |
+| trl | RLHF & SFT |
+| diffusers | Image Generation |
+
+---
+
+# Best Practices
+
+✅ Always use
+
+```
+AutoTokenizer
+```
+
+instead of
+
+model-specific tokenizers
+
+when appropriate.
+
+---
+
+✅ Match
+
+Tokenizer
+
+and
+
+Model.
+
+---
+
+✅ Use
+
+```
+device_map="auto"
+```
+
+for
+
+large models
+
+when supported.
+
+---
+
+✅ Use
+
+```
+skip_special_tokens=True
+```
+
+when decoding.
+
+---
+
+# Common Mistakes
+
+❌ Using
+
+the wrong tokenizer
+
+for a model.
+
+---
+
+❌ Forgetting
+
+```
+attention_mask
+```
+
+when required.
+
+---
+
+❌ Trying
+
+to load
+
+large models
+
+without
+
+sufficient memory.
+
+---
+
+# Cheat Sheet
+
+| Function | Purpose |
+|----------|----------|
+| `pipeline()` | Quick Inference |
+| `AutoTokenizer` | Tokenizer |
+| `AutoModel` | Base Model |
+| `AutoModelForCausalLM` | GPT/Llama |
+| `AutoModelForSequenceClassification` | Classification |
+| `generate()` | Generate Text |
+| `decode()` | Convert IDs to Text |
+
+---
+
+# 🤖 Hugging Face Workflow
+
+```
+Prompt
+
+↓
+
+Tokenizer
+
+↓
+
+Input IDs
+
+↓
+
+Transformer Model
+
+↓
+
+Output IDs
+
+↓
+
+Tokenizer Decode
+
+↓
+
+Generated Text
+```
+
+---
+
+# Summary
+
+- Hugging Face provides tools for working with pretrained Transformer models.
+- `AutoTokenizer` converts text into token IDs.
+- `AutoModel` loads the base architecture.
+- `AutoModelForCausalLM` is used for autoregressive text generation.
+- `pipeline()` offers a simple interface for common tasks.
+- Modern LLM workflows rely heavily on the Transformers ecosystem.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Hugging Face?
+2. Why do we need a tokenizer?
+3. Difference between `AutoModel` and `AutoModelForCausalLM`?
+4. What is the purpose of `pipeline()`?
+5. What is `device_map="auto"`?
+6. What is `attention_mask`?
+7. Why should the tokenizer and model match?
+8. What does `generate()` do?
+9. What are chat templates?
+10. Name three Hugging Face libraries besides `transformers`.
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Install:
+
+- transformers
+- datasets
+- accelerate
+- peft
+- trl
+
+---
+
+### Exercise 2
+
+Load GPT-2 and generate a short paragraph.
+
+---
+
+### Exercise 3
+
+Load a BERT model using `AutoModel`.
+
+---
+
+### Exercise 4
+
+Tokenize and decode five different sentences.
+
+---
+
+### Exercise 5
+
+Load a small Llama, Gemma, or Qwen model (if you have access and sufficient hardware) and generate text from a simple prompt.
+
+---
