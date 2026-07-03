@@ -30231,3 +30231,1605 @@ Plot the training loss from the logged metrics.
 Evaluate the model on five unseen prompts and compare the responses with the base model.
 
 ---
+
+
+# Module 27 – Dataset Preparation & Chat Templates
+
+> **Goal**
+>
+> Learn how to prepare high-quality datasets for LLM fine-tuning, convert different dataset formats into chat conversations, tokenize them correctly, and build production-ready datasets for models like **Llama, Gemma, Qwen, Mistral, Phi, and DeepSeek**.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Dataset Quality Matters
+- Dataset Formats
+- Alpaca Format
+- ShareGPT Format
+- OpenAI Chat Format
+- Chat Templates
+- Tokenization Pipeline
+- Dataset Cleaning
+- Dataset Splitting
+- Packing Sequences
+- Data Collator
+- Hugging Face Dataset
+- Complete Preprocessing Pipeline
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you have
+
+the world's
+
+best teacher.
+
+But
+
+you give
+
+him
+
+wrong books.
+
+Will
+
+he become
+
+a better teacher?
+
+No.
+
+Even
+
+the smartest teacher
+
+cannot learn
+
+from
+
+bad books.
+
+LLMs
+
+work
+
+the same way.
+
+```
+Bad Dataset
+
+↓
+
+Bad Model
+```
+
+```
+Good Dataset
+
+↓
+
+Good Model
+```
+
+In LLM training,
+
+people often say:
+
+> **Data quality matters more than model size.**
+
+---
+
+# Why Dataset Preparation?
+
+A pretrained model
+
+already knows
+
+language.
+
+During fine-tuning,
+
+you are teaching
+
+new behavior.
+
+Therefore,
+
+the quality
+
+of your dataset
+
+directly affects
+
+the model's responses.
+
+---
+
+# Complete Dataset Pipeline
+
+```
+Raw Data
+
+↓
+
+Cleaning
+
+↓
+
+Formatting
+
+↓
+
+Chat Template
+
+↓
+
+Tokenization
+
+↓
+
+Packing
+
+↓
+
+Training
+```
+
+---
+
+# Types of Datasets
+
+Most instruction datasets
+
+contain
+
+```
+Instruction
+
+↓
+
+Input (Optional)
+
+↓
+
+Output
+```
+
+or
+
+```
+User
+
+↓
+
+Assistant
+```
+
+conversation pairs.
+
+---
+
+# Alpaca Format
+
+One of
+
+the most popular
+
+instruction formats.
+
+Example
+
+```json
+{
+  "instruction": "Explain AI",
+  "input": "",
+  "output": "Artificial Intelligence is..."
+}
+```
+
+Widely used
+
+for
+
+instruction tuning.
+
+---
+
+# ShareGPT Format
+
+Conversation-based.
+
+```json
+[
+  {
+    "from":"human",
+    "value":"Hello"
+  },
+  {
+    "from":"gpt",
+    "value":"Hi! How can I help?"
+  }
+]
+```
+
+Good for
+
+multi-turn
+
+chatbots.
+
+---
+
+# OpenAI Messages Format
+
+Used by
+
+ChatGPT APIs.
+
+```json
+[
+  {
+    "role":"system",
+    "content":"You are a helpful assistant."
+  },
+  {
+    "role":"user",
+    "content":"Explain AI"
+  },
+  {
+    "role":"assistant",
+    "content":"Artificial Intelligence..."
+  }
+]
+```
+
+Most modern
+
+frameworks
+
+support
+
+this format.
+
+---
+
+# Which Format Should You Choose?
+
+| Format | Best Use |
+|---------|----------|
+| Alpaca | Simple Instruction Tuning |
+| ShareGPT | Multi-turn Conversations |
+| OpenAI Messages | Chat Models |
+| Custom JSON | Domain-Specific Tasks |
+
+---
+
+# Chat Templates
+
+Modern LLMs
+
+don't train
+
+on plain text.
+
+Instead,
+
+the conversation
+
+is converted
+
+into
+
+a special format.
+
+Example
+
+```
+<|user|>
+
+Explain AI
+
+<|assistant|>
+
+Artificial Intelligence...
+```
+
+Different models
+
+use
+
+different templates.
+
+---
+
+# Llama Chat Template
+
+Example
+
+```text
+<|begin_of_text|>
+
+<|start_header_id|>user
+
+Explain AI
+
+<|end_header_id|>
+
+<|start_header_id|>assistant
+```
+
+The tokenizer
+
+creates
+
+this automatically.
+
+---
+
+# Applying Chat Template
+
+```python
+messages = [
+
+    {
+
+        "role":"user",
+
+        "content":"Explain AI"
+
+    },
+
+    {
+
+        "role":"assistant",
+
+        "content":"Artificial Intelligence..."
+
+    }
+
+]
+
+formatted = tokenizer.apply_chat_template(
+
+    messages,
+
+    tokenize=False,
+
+    add_generation_prompt=False
+
+)
+
+print(formatted)
+```
+
+---
+
+# Why Chat Templates?
+
+Without template
+
+```
+Explain AI
+```
+
+With template
+
+```
+User
+
+↓
+
+Assistant
+```
+
+The model
+
+understands
+
+conversation roles.
+
+---
+
+# Dataset Cleaning
+
+Before training
+
+remove
+
+❌ Duplicate Examples
+
+❌ Empty Responses
+
+❌ Broken Text
+
+❌ HTML Tags
+
+❌ Random Symbols
+
+Example
+
+```python
+dataset = dataset.filter(
+
+    lambda x:
+
+    len(x["output"]) > 0
+
+)
+```
+
+---
+
+# Dataset Splitting
+
+Always create
+
+```
+Training
+
+Validation
+
+Testing
+```
+
+Example
+
+```
+80%
+
+10%
+
+10%
+```
+
+This helps
+
+measure
+
+generalization.
+
+---
+
+# Tokenization Pipeline
+
+```python
+def tokenize(example):
+
+    return tokenizer(
+
+        example["text"],
+
+        truncation=True,
+
+        max_length=2048
+
+    )
+
+dataset = dataset.map(tokenize)
+```
+
+---
+
+# Sequence Packing
+
+Suppose
+
+Sentence 1
+
+```
+100 Tokens
+```
+
+Sentence 2
+
+```
+80 Tokens
+```
+
+Instead of
+
+padding heavily,
+
+packing combines shorter sequences to better utilize the model's context window.
+
+Benefits
+
+- Higher GPU utilization
+- Faster training
+- Less wasted padding
+
+---
+
+# Data Collator
+
+Responsible for
+
+```
+Padding
+
+↓
+
+Batch Creation
+
+↓
+
+Tensor Conversion
+```
+
+Example
+
+```python
+from transformers import DataCollatorForLanguageModeling
+
+collator = DataCollatorForLanguageModeling(
+
+    tokenizer,
+
+    mlm=False
+
+)
+```
+
+For causal language models,
+
+`mlm=False`
+
+is required.
+
+---
+
+# Hugging Face Dataset
+
+```python
+from datasets import load_dataset
+
+dataset = load_dataset(
+
+    "json",
+
+    data_files="train.json"
+
+)
+```
+
+---
+
+# Formatting Dataset
+
+```python
+def format_dataset(example):
+
+    messages = [
+
+        {
+
+            "role":"user",
+
+            "content":example["instruction"]
+
+        },
+
+        {
+
+            "role":"assistant",
+
+            "content":example["output"]
+
+        }
+
+    ]
+
+    example["text"] = tokenizer.apply_chat_template(
+
+        messages,
+
+        tokenize=False
+
+    )
+
+    return example
+
+dataset = dataset.map(format_dataset)
+```
+
+---
+
+# Complete Preprocessing Pipeline
+
+```
+Raw Dataset
+
+↓
+
+Cleaning
+
+↓
+
+Formatting
+
+↓
+
+Chat Template
+
+↓
+
+Tokenization
+
+↓
+
+Packing
+
+↓
+
+Trainer
+```
+
+---
+
+# Example Folder Structure
+
+```
+project/
+
+│
+
+├── train.json
+
+├── valid.json
+
+├── tokenizer/
+
+├── preprocess.py
+
+├── train.py
+
+└── outputs/
+```
+
+---
+
+# Dataset Size
+
+Approximate guideline
+
+| Dataset Size | Use Case |
+|--------------|----------|
+| 100–500 | Experiment |
+| 1K–10K | Small Fine-Tuning |
+| 10K–100K | Good Instruction Model |
+| 100K+ | Large Domain Adaptation |
+
+Quality
+
+is generally
+
+more important
+
+than
+
+quantity.
+
+---
+
+# Best Practices
+
+✅ Remove duplicate samples.
+
+✅ Keep answers consistent.
+
+✅ Use the correct chat template for the target model.
+
+✅ Keep training and validation datasets separate.
+
+✅ Verify token lengths before training.
+
+---
+
+# Common Mistakes
+
+❌ Mixing multiple dataset formats.
+
+❌ Forgetting chat templates.
+
+❌ Very long responses without truncation.
+
+❌ Duplicate conversations.
+
+❌ Low-quality synthetic data without review.
+
+---
+
+# Cheat Sheet
+
+| Step | Purpose |
+|------|----------|
+| Cleaning | Remove Noise |
+| Formatting | Standard Structure |
+| Chat Template | Model Format |
+| Tokenization | Convert to IDs |
+| Packing | Better GPU Usage |
+| Data Collator | Create Batches |
+
+---
+
+# 🤖 Real Industry Workflow
+
+```
+Raw PDF
+
+↓
+
+OCR
+
+↓
+
+Cleaning
+
+↓
+
+JSON
+
+↓
+
+Chat Template
+
+↓
+
+Tokenizer
+
+↓
+
+Dataset
+
+↓
+
+Training
+```
+
+This workflow
+
+is commonly used
+
+for
+
+building
+
+domain-specific
+
+chatbots.
+
+---
+
+# Summary
+
+- High-quality datasets are essential for successful LLM fine-tuning.
+- Popular formats include Alpaca, ShareGPT, and OpenAI Messages.
+- Chat templates convert structured conversations into model-specific prompts.
+- Cleaning, tokenization, and sequence packing improve training efficiency.
+- Hugging Face Datasets simplifies preprocessing and dataset management.
+
+---
+
+# 🎤 Interview Questions
+
+1. Why is dataset quality important?
+2. Difference between Alpaca and ShareGPT?
+3. What is a chat template?
+4. Why do different models require different templates?
+5. Why is sequence packing useful?
+6. What does a Data Collator do?
+7. Why should datasets be split into train/validation/test?
+8. Why is tokenization required before training?
+9. What are common dataset cleaning steps?
+10. Why is high-quality data often more valuable than simply increasing dataset size?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a 100-example Alpaca-format dataset.
+
+---
+
+### Exercise 2
+
+Convert the dataset into OpenAI Messages format.
+
+---
+
+### Exercise 3
+
+Apply the tokenizer's chat template to every example.
+
+---
+
+### Exercise 4
+
+Tokenize the dataset and inspect the generated token lengths.
+
+---
+
+### Exercise 5
+
+Split the dataset into train, validation, and test sets.
+
+---
+
+
+
+# Module 28 – End-to-End LLM Fine-Tuning Project (Production Pipeline)
+
+> **Goal**
+>
+> Build a complete production-ready LLM fine-tuning project from scratch using **Unsloth + Hugging Face + TRL + PEFT + QLoRA**. By the end of this module, you'll have a fully fine-tuned chatbot that can run locally or be shared on Hugging Face.
+
+---
+
+# 📚 Project Overview
+
+In this module, we will build a complete pipeline.
+
+```
+Choose Model
+
+↓
+
+Load Model
+
+↓
+
+Prepare Dataset
+
+↓
+
+Apply Chat Template
+
+↓
+
+Tokenization
+
+↓
+
+QLoRA
+
+↓
+
+LoRA
+
+↓
+
+Training
+
+↓
+
+Evaluation
+
+↓
+
+Save Adapter
+
+↓
+
+Merge Model
+
+↓
+
+Export GGUF
+
+↓
+
+Upload to Hugging Face
+
+↓
+
+Run on Ollama
+```
+
+---
+
+# 📂 Final Project Structure
+
+```
+llm-finetuning-project/
+
+│
+
+├── data/
+
+│   ├── train.json
+
+│   ├── validation.json
+
+│   └── test.json
+
+│
+
+├── outputs/
+
+│
+
+├── merged_model/
+
+│
+
+├── gguf/
+
+│
+
+├── app.py
+
+├── train.py
+
+├── inference.py
+
+├── evaluate.py
+
+├── requirements.txt
+
+├── README.md
+
+└── notebook.ipynb
+```
+
+---
+
+# Step 1 — Install Libraries
+
+```bash
+pip install unsloth
+pip install transformers
+pip install datasets
+pip install trl
+pip install peft
+pip install bitsandbytes
+pip install accelerate
+```
+
+---
+
+# Step 2 — Import Libraries
+
+```python
+import torch
+
+from datasets import load_dataset
+
+from unsloth import FastLanguageModel
+
+from transformers import TrainingArguments
+
+from trl import SFTTrainer
+```
+
+---
+
+# Step 3 — Load Base Model
+
+```python
+model, tokenizer = FastLanguageModel.from_pretrained(
+
+    model_name = "unsloth/Llama-3.2-3B",
+
+    max_seq_length = 2048,
+
+    load_in_4bit = True,
+
+)
+```
+
+---
+
+# Step 4 — Apply LoRA
+
+```python
+model = FastLanguageModel.get_peft_model(
+
+    model,
+
+    r = 16,
+
+    lora_alpha = 16,
+
+    lora_dropout = 0,
+
+    bias = "none",
+
+    target_modules = [
+
+        "q_proj",
+
+        "k_proj",
+
+        "v_proj",
+
+        "o_proj",
+
+        "gate_proj",
+
+        "up_proj",
+
+        "down_proj"
+
+    ]
+
+)
+```
+
+---
+
+# Step 5 — Load Dataset
+
+Suppose
+
+our dataset
+
+looks like
+
+```json
+{
+ "instruction":"Explain AI",
+ "output":"Artificial Intelligence is..."
+}
+```
+
+Load it
+
+```python
+dataset = load_dataset(
+
+    "json",
+
+    data_files={
+
+        "train":"data/train.json",
+
+        "validation":"data/validation.json"
+
+    }
+
+)
+```
+
+---
+
+# Step 6 — Apply Chat Template
+
+```python
+def formatting(example):
+
+    messages = [
+
+        {
+
+            "role":"user",
+
+            "content":example["instruction"]
+
+        },
+
+        {
+
+            "role":"assistant",
+
+            "content":example["output"]
+
+        }
+
+    ]
+
+    example["text"] = tokenizer.apply_chat_template(
+
+        messages,
+
+        tokenize=False
+
+    )
+
+    return example
+
+dataset = dataset.map(formatting)
+```
+
+---
+
+# Step 7 — Configure Training
+
+```python
+training_args = TrainingArguments(
+
+    output_dir = "outputs",
+
+    learning_rate = 2e-4,
+
+    per_device_train_batch_size = 2,
+
+    gradient_accumulation_steps = 4,
+
+    num_train_epochs = 3,
+
+    logging_steps = 10,
+
+    save_strategy = "epoch",
+
+    evaluation_strategy = "epoch",
+
+    bf16 = True,
+
+    report_to = "none"
+
+)
+```
+
+---
+
+# Step 8 — Create Trainer
+
+```python
+trainer = SFTTrainer(
+
+    model = model,
+
+    tokenizer = tokenizer,
+
+    train_dataset = dataset["train"],
+
+    eval_dataset = dataset["validation"],
+
+    args = training_args,
+
+)
+```
+
+---
+
+# Step 9 — Start Training
+
+```python
+trainer.train()
+```
+
+Training
+
+will perform
+
+```
+Forward Pass
+
+↓
+
+Loss
+
+↓
+
+Backpropagation
+
+↓
+
+Optimizer Step
+
+↓
+
+Checkpoint
+
+↓
+
+Repeat
+```
+
+---
+
+# Step 10 — Save Adapter
+
+```python
+model.save_pretrained(
+
+    "outputs/lora_adapter"
+
+)
+
+tokenizer.save_pretrained(
+
+    "outputs/lora_adapter"
+
+)
+```
+
+---
+
+# Step 11 — Test Inference
+
+```python
+FastLanguageModel.for_inference(model)
+
+prompt = "Explain Deep Learning."
+
+inputs = tokenizer(
+
+    prompt,
+
+    return_tensors="pt"
+
+).to("cuda")
+
+outputs = model.generate(
+
+    **inputs,
+
+    max_new_tokens=150,
+
+    temperature=0.7
+
+)
+
+print(
+
+tokenizer.decode(
+
+outputs[0],
+
+skip_special_tokens=True
+
+)
+
+)
+```
+
+---
+
+# Step 12 — Merge LoRA
+
+```python
+model.save_pretrained_merged(
+
+    "merged_model",
+
+    tokenizer
+
+)
+```
+
+This creates
+
+a standalone
+
+merged model.
+
+---
+
+# Step 13 — Export GGUF
+
+```python
+model.save_pretrained_gguf(
+
+    "gguf",
+
+    tokenizer
+
+)
+```
+
+GGUF
+
+is used
+
+by
+
+- Ollama
+- LM Studio
+- llama.cpp
+
+---
+
+# Step 14 — Upload to Hugging Face
+
+```python
+model.push_to_hub(
+
+    "username/my-chatbot"
+
+)
+
+tokenizer.push_to_hub(
+
+    "username/my-chatbot"
+
+)
+```
+
+---
+
+# Step 15 — Run Locally (Ollama)
+
+Example
+
+```bash
+ollama create my-model -f Modelfile
+
+ollama run my-model
+```
+
+Now
+
+your chatbot
+
+runs
+
+offline.
+
+---
+
+# Complete Production Pipeline
+
+```
+Dataset
+
+↓
+
+Cleaning
+
+↓
+
+Chat Template
+
+↓
+
+Tokenizer
+
+↓
+
+QLoRA
+
+↓
+
+LoRA
+
+↓
+
+SFTTrainer
+
+↓
+
+Training
+
+↓
+
+Evaluation
+
+↓
+
+Adapter
+
+↓
+
+Merged Model
+
+↓
+
+GGUF
+
+↓
+
+Ollama
+
+↓
+
+Production
+```
+
+---
+
+# Memory Optimization Tips
+
+| GPU | Recommended Model |
+|------|-------------------|
+| 8 GB | TinyLlama, Phi |
+| 12 GB | Gemma 2B, Llama 3.2 1B |
+| 16 GB | Llama 7B (QLoRA) |
+| 24 GB | 8B–13B Models |
+| 48 GB+ | Larger Models or Higher Batch Sizes |
+
+These are general guidelines and can vary depending on sequence length, batch size, and optimization settings.
+
+---
+
+# Choosing Hyperparameters
+
+| Parameter | Typical Value |
+|------------|---------------|
+| Learning Rate | 2e-4 |
+| Epochs | 2–3 |
+| LoRA Rank | 16 |
+| Alpha | 16–32 |
+| Dropout | 0.0–0.05 |
+| Batch Size | 1–4 |
+| Gradient Accumulation | 4–16 |
+
+---
+
+# Folder After Training
+
+```
+outputs/
+
+│
+
+├── adapter_config.json
+
+├── adapter_model.safetensors
+
+├── tokenizer.json
+
+├── tokenizer_config.json
+
+├── special_tokens_map.json
+
+└── README.md
+```
+
+---
+
+# Common Errors
+
+### CUDA Out of Memory
+
+Solution
+
+- Reduce batch size
+- Reduce sequence length
+- Increase gradient accumulation
+- Enable 4-bit loading
+
+---
+
+### Loss Not Decreasing
+
+Check
+
+- Dataset quality
+- Learning rate
+- Chat template
+- Tokenization
+- Label formatting
+
+---
+
+### Poor Responses
+
+Possible causes
+
+- Small dataset
+- Low-quality examples
+- Too few training epochs
+- Domain mismatch
+
+---
+
+# Best Practices
+
+✅ Always validate your dataset.
+
+✅ Keep training and validation data separate.
+
+✅ Save checkpoints.
+
+✅ Evaluate before deployment.
+
+✅ Use version control for datasets and models.
+
+---
+
+# Real Industry Pipeline
+
+```
+Collect Data
+
+↓
+
+Clean Data
+
+↓
+
+Instruction Dataset
+
+↓
+
+Llama 3
+
+↓
+
+QLoRA
+
+↓
+
+Unsloth
+
+↓
+
+TRL
+
+↓
+
+Training
+
+↓
+
+Evaluation
+
+↓
+
+Hugging Face
+
+↓
+
+GGUF
+
+↓
+
+Ollama
+
+↓
+
+Production API
+```
+
+---
+
+# Summary
+
+- An end-to-end fine-tuning pipeline consists of data preparation, model loading, LoRA configuration, training, evaluation, and deployment.
+- Unsloth, PEFT, TRL, and Hugging Face integrate into a streamlined workflow.
+- Adapters can be merged or exported depending on deployment requirements.
+- GGUF enables efficient local inference with tools such as Ollama and LM Studio.
+- Careful dataset preparation and evaluation are as important as model training.
+
+---
+
+# 🎤 Interview Questions
+
+1. What are the major stages of an end-to-end LLM fine-tuning pipeline?
+2. Why do we apply chat templates before training?
+3. Why is LoRA added before creating the trainer?
+4. When should you merge LoRA adapters?
+5. Why export to GGUF?
+6. How do you reduce CUDA out-of-memory errors?
+7. Why is a validation dataset important?
+8. What files are required to reload a fine-tuned adapter?
+9. How would you deploy the final model locally?
+10. Which libraries are used in this complete pipeline?
+
+---
+
+# 📝 Final Project
+
+Build a domain-specific chatbot for one of the following:
+
+- 📚 College Assistant
+- 🏥 Medical Assistant
+- ⚖️ Legal Assistant
+- 💻 Coding Tutor
+- 🌾 Agriculture Advisor
+- 📖 Education Mentor
+
+Requirements:
+
+- Collect or prepare a dataset
+- Format it with chat templates
+- Fine-tune using Unsloth + TRL
+- Evaluate responses
+- Export to GGUF
+- Run locally with Ollama
+- Publish the adapter on Hugging Face
+- Create a GitHub repository with documentation
+
+---
