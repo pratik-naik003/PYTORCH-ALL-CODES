@@ -16408,3 +16408,3469 @@ Observe how they affect the model.
 Compare the training time of an RNN, LSTM, and GRU on the same toy dataset.
 
 ---
+
+
+
+# Module 16 — Attention Mechanism
+
+# Part 1 — Why Was Attention Invented?
+
+---
+
+# Story
+
+Imagine you are reading a book.
+
+The first sentence is
+
+```
+John was born in France.
+```
+
+Now imagine
+
+after 500 pages
+
+you read
+
+```
+He speaks fluent French.
+```
+
+Who is
+
+"He"?
+
+Your brain immediately remembers
+
+```
+John
+
+↓
+
+France
+
+↓
+
+French
+```
+
+Humans can remember
+
+information from far away.
+
+But older neural networks
+
+couldn't.
+
+That was one of the biggest problems in Deep Learning.
+
+---
+
+# Before Transformers
+
+Before GPT
+
+before Llama
+
+before BERT
+
+the NLP world looked like
+
+```
+RNN
+
+↓
+
+LSTM
+
+↓
+
+GRU
+```
+
+These models processed
+
+one word
+
+at a time.
+
+Example
+
+```
+I
+
+↓
+
+Love
+
+↓
+
+Deep
+
+↓
+
+Learning
+```
+
+Word by word.
+
+---
+
+# Sequential Processing
+
+Sentence
+
+```
+I Love AI
+```
+
+Processing
+
+```
+I
+
+↓
+
+Love
+
+↓
+
+AI
+```
+
+The model
+
+cannot process
+
+"AI"
+
+until
+
+"I"
+
+and
+
+"Love"
+
+are finished.
+
+Problem
+
+```
+Slow Training
+```
+
+---
+
+# Long Sentences
+
+Imagine
+
+```
+1000 words
+```
+
+The first word
+
+must travel
+
+through
+
+999 steps
+
+before reaching
+
+the last word.
+
+During this journey
+
+information slowly disappears.
+
+This is called
+
+```
+Long Range Dependency Problem
+```
+
+---
+
+# Example
+
+Sentence
+
+```
+The animal didn't cross the road because it was too tired.
+```
+
+Question
+
+What is
+
+```
+it
+```
+
+referring to?
+
+```
+Animal
+
+or
+
+Road?
+```
+
+Humans instantly know
+
+```
+Animal
+```
+
+Old RNNs
+
+often failed.
+
+---
+
+# Encoder Decoder
+
+Researchers invented
+
+Encoder Decoder Networks.
+
+Idea
+
+```
+Sentence
+
+↓
+
+Encoder
+
+↓
+
+Context Vector
+
+↓
+
+Decoder
+
+↓
+
+Translation
+```
+
+Example
+
+```
+English
+
+↓
+
+Encoder
+
+↓
+
+Context
+
+↓
+
+Decoder
+
+↓
+
+French
+```
+
+---
+
+# The Bottleneck Problem
+
+Imagine
+
+this sentence
+
+```
+The weather in Mumbai is beautiful today and I want to go to Marine Drive with my friends because the sunset looks amazing after the rain...
+```
+
+The encoder
+
+must compress
+
+the entire sentence
+
+into
+
+one vector.
+
+```
+100 words
+
+↓
+
+One Vector
+
+↓
+
+Decoder
+```
+
+This is like
+
+trying to compress
+
+an entire movie
+
+into
+
+one photograph.
+
+Impossible.
+
+---
+
+# Information Loss
+
+As sentence length increases
+
+```
+Sentence Length
+
+↑
+
+↓
+
+Accuracy
+
+↓
+
+Drops
+```
+
+Long sentences
+
+became difficult
+
+to translate.
+
+Researchers realized
+
+something important.
+
+Instead of
+
+remembering
+
+everything,
+
+what if
+
+the decoder
+
+looked back
+
+at the important words?
+
+That simple idea
+
+changed AI forever.
+
+---
+
+# Birth of Attention
+
+Instead of saying
+
+```
+Remember Everything
+```
+
+Attention says
+
+```
+Remember
+
+Only
+
+What Matters
+
+Right Now.
+```
+
+Example
+
+Sentence
+
+```
+The cat sat on the chair.
+```
+
+When predicting
+
+```
+chair
+```
+
+Should the model
+
+look equally
+
+at every word?
+
+```
+The
+
+Cat
+
+Sat
+
+On
+
+Chair
+```
+
+No.
+
+It mainly needs
+
+```
+Sat
+
+On
+
+Chair
+```
+
+Attention
+
+lets the model
+
+focus
+
+on
+
+important words
+
+instead of
+
+every word equally.
+
+---
+
+# Human Analogy
+
+Suppose someone asks
+
+```
+Where do you live?
+```
+
+Does your brain
+
+remember
+
+```
+Your First Birthday?
+
+Class 5 Exam?
+
+Yesterday's Breakfast?
+```
+
+No.
+
+It immediately
+
+retrieves
+
+only
+
+the relevant memory.
+
+That
+
+is exactly
+
+what Attention does.
+
+---
+
+# Why Attention Changed Everything
+
+Before
+
+```
+RNN
+
+↓
+
+LSTM
+
+↓
+
+GRU
+```
+
+After
+
+```
+Attention
+
+↓
+
+Transformer
+
+↓
+
+BERT
+
+↓
+
+GPT
+
+↓
+
+Llama
+
+↓
+
+Gemma
+
+↓
+
+Qwen
+```
+
+Almost every modern LLM
+
+is built
+
+on Attention.
+
+---
+
+# Visual Comparison
+
+RNN
+
+```
+Word1
+
+↓
+
+Word2
+
+↓
+
+Word3
+
+↓
+
+Word4
+```
+
+Attention
+
+```
+Word1 ←→ Word4
+
+Word2 ←→ Word3
+
+Word1 ←→ Word2
+
+Word4 ←→ Word1
+```
+
+Every word
+
+can directly communicate
+
+with every other word.
+
+---
+
+# Key Takeaways
+
+✅ RNNs process words sequentially.
+
+✅ Long sentences cause information loss.
+
+✅ Encoder-Decoder models suffer from bottlenecks.
+
+✅ Attention removes this bottleneck.
+
+✅ Every modern LLM is built on the Attention mechanism.
+
+---
+
+# Coming Next...
+
+Now comes the most important topic in Deep Learning.
+
+We'll answer:
+
+```
+What are
+
+Query?
+
+Key?
+
+Value?
+
+```
+
+and why these three vectors
+
+are the heart
+
+of every Transformer.
+
+
+
+# Module 16 – Attention Mechanism
+
+# Part 2 – Query, Key & Value (The Heart of Every LLM)
+
+> **Goal**
+>
+> By the end of this chapter, you'll understand the three most important vectors in modern AI:
+>
+> - Query (Q)
+> - Key (K)
+> - Value (V)
+>
+> These three vectors are used in **GPT, Llama, Gemini, Claude, Qwen, DeepSeek, Mistral, BERT, ViT**, and almost every Transformer model.
+
+---
+
+# 📖 Story
+
+Imagine you're inside a huge library.
+
+The library contains
+
+```
+10 Million Books
+```
+
+Now you ask the librarian
+
+```
+"I want a book about Deep Learning."
+```
+
+What happens?
+
+The librarian does **NOT**
+
+read
+
+```
+Book 1
+
+Book 2
+
+Book 3
+
+...
+
+Book 10 Million
+```
+
+Instead,
+
+the librarian does three things.
+
+---
+
+## Step 1
+
+Understand
+
+what you are looking for.
+
+```
+Deep Learning
+```
+
+This is called
+
+```
+Query
+```
+
+---
+
+## Step 2
+
+Look at
+
+every book's label.
+
+```
+Mathematics
+
+History
+
+Physics
+
+AI
+
+Cooking
+
+Biology
+```
+
+These labels are
+
+```
+Keys
+```
+
+---
+
+## Step 3
+
+Once the correct book is found,
+
+give you
+
+the actual book.
+
+That book is
+
+```
+Value
+```
+
+---
+
+# Amazing...
+
+Without knowing it,
+
+you already understand
+
+```
+Query
+
+Key
+
+Value
+```
+
+This exact idea
+
+powers
+
+```
+ChatGPT
+
+Claude
+
+Gemini
+
+Llama
+
+DeepSeek
+
+Qwen
+```
+
+---
+
+# What is Query?
+
+Query means
+
+> **What am I looking for?**
+
+Example
+
+Sentence
+
+```
+The cat sat on the chair.
+```
+
+Suppose we are processing
+
+```
+chair
+```
+
+The model asks
+
+```
+Which previous words
+
+are important
+
+for understanding
+
+"chair"?
+```
+
+That question
+
+is
+
+```
+Query
+```
+
+---
+
+# What is Key?
+
+Every word
+
+contains
+
+a label.
+
+Example
+
+```
+The
+
+↓
+
+Article
+
+----------------
+
+Cat
+
+↓
+
+Animal
+
+----------------
+
+Sat
+
+↓
+
+Action
+
+----------------
+
+Chair
+
+↓
+
+Object
+```
+
+These labels
+
+are called
+
+```
+Keys
+```
+
+Keys tell the model
+
+what information
+
+each word contains.
+
+---
+
+# What is Value?
+
+Once
+
+the model finds
+
+important words,
+
+it retrieves
+
+their information.
+
+That information
+
+is called
+
+```
+Value
+```
+
+Think of
+
+```
+Key
+
+↓
+
+Address
+
+----------------
+
+Value
+
+↓
+
+Actual House
+```
+
+---
+
+# Human Brain Analogy
+
+Suppose someone asks
+
+```
+Where did you complete your graduation?
+```
+
+Your brain doesn't search
+
+every memory equally.
+
+Instead,
+
+it creates
+
+```
+Query
+
+↓
+
+Graduation
+```
+
+Then
+
+it searches memories
+
+```
+School
+
+College
+
+Friends
+
+Movies
+
+Travel
+```
+
+Finally
+
+it retrieves
+
+```
+Walchand College
+```
+
+Exactly
+
+how Attention works.
+
+---
+
+# Example
+
+Sentence
+
+```
+The dog chased the ball because it was fast.
+```
+
+Question
+
+Who is
+
+```
+it
+```
+
+The model creates
+
+```
+Query
+
+↓
+
+it
+```
+
+Then compares
+
+```
+The
+
+Dog
+
+Chased
+
+Ball
+
+Fast
+```
+
+Finally
+
+it realizes
+
+```
+Dog
+
+↓
+
+Fast
+```
+
+is
+
+more important
+
+than
+
+```
+The
+```
+
+---
+
+# Query, Key & Value Flow
+
+```
+Current Word
+
+↓
+
+Create Query
+
+↓
+
+Compare With
+
+All Keys
+
+↓
+
+Similarity Score
+
+↓
+
+Select Important Values
+
+↓
+
+Create New Representation
+```
+
+---
+
+# Real Meaning
+
+Every word
+
+creates
+
+three vectors.
+
+```
+Word
+
+↓
+
+Query
+
+↓
+
+Key
+
+↓
+
+Value
+```
+
+Example
+
+```
+"Cat"
+
+↓
+
+Qc
+
+↓
+
+Kc
+
+↓
+
+Vc
+```
+
+Similarly
+
+```
+Dog
+
+↓
+
+Qd
+
+↓
+
+Kd
+
+↓
+
+Vd
+```
+
+Every token
+
+has
+
+its own
+
+Q
+
+K
+
+and
+
+V.
+
+---
+
+# Where Do Q, K and V Come From?
+
+They are **not** typed manually.
+
+The model learns them.
+
+Suppose
+
+Embedding
+
+```
+768 Numbers
+```
+
+Example
+
+```
+Embedding
+
+↓
+
+Linear Layer
+
+↓
+
+Query
+```
+
+Another Linear Layer
+
+↓
+
+Key
+
+Another Linear Layer
+
+↓
+
+Value
+
+Mathematically
+
+```
+Q = XWq
+
+K = XWk
+
+V = XWv
+```
+
+Where
+
+```
+X
+
+↓
+
+Input Embedding
+
+Wq
+
+↓
+
+Learnable Matrix
+
+Wk
+
+↓
+
+Learnable Matrix
+
+Wv
+
+↓
+
+Learnable Matrix
+```
+
+These matrices are updated during training.
+
+---
+
+# Visual Diagram
+
+```
+Embedding
+
+│
+
+├────► Wq ───► Query
+
+│
+
+├────► Wk ───► Key
+
+│
+
+└────► Wv ───► Value
+```
+
+Notice
+
+Same embedding
+
+Different projections.
+
+---
+
+# Why Three Different Matrices?
+
+Question
+
+Why not
+
+```
+Query = Key = Value ?
+```
+
+Because
+
+each vector
+
+has
+
+a different job.
+
+| Vector | Purpose |
+|---------|----------|
+| Query | What am I searching for? |
+| Key | What information do I have? |
+| Value | What information should I send? |
+
+---
+
+# Example
+
+Sentence
+
+```
+Virat Kohli plays cricket.
+```
+
+Suppose we process
+
+```
+plays
+```
+
+Query asks
+
+```
+Who performs this action?
+```
+
+Keys
+
+```
+Virat
+
+Kohli
+
+Plays
+
+Cricket
+```
+
+Attention
+
+finds
+
+```
+Virat Kohli
+```
+
+Values
+
+contain
+
+information about
+
+Virat Kohli
+
+which is used
+
+to understand
+
+the sentence.
+
+---
+
+# Similarity
+
+How does the model know
+
+which Key
+
+matches
+
+the Query?
+
+It computes
+
+```
+Similarity Score
+```
+
+Higher Score
+
+↓
+
+More Attention
+
+Lower Score
+
+↓
+
+Less Attention
+
+---
+
+# Dot Product
+
+The simplest similarity measure
+
+is
+
+```
+Dot Product
+```
+
+Suppose
+
+```
+Query
+
+=
+
+[1 2]
+
+Key
+
+=
+
+[3 4]
+```
+
+Dot Product
+
+```
+1×3
+
++
+
+2×4
+
+=
+
+11
+```
+
+Large number
+
+↓
+
+High Similarity
+
+Small number
+
+↓
+
+Low Similarity
+
+---
+
+# Example
+
+Query
+
+```
+[1,0]
+```
+
+Key A
+
+```
+[1,0]
+```
+
+Dot Product
+
+```
+1
+```
+
+Key B
+
+```
+[0,1]
+```
+
+Dot Product
+
+```
+0
+```
+
+Clearly
+
+Key A
+
+matches better.
+
+---
+
+# But There's a Problem...
+
+Suppose
+
+Embedding Size
+
+becomes
+
+```
+4096
+```
+
+Dot Products
+
+become
+
+very large.
+
+Large numbers
+
+cause
+
+Softmax
+
+to become unstable.
+
+Solution?
+
+Divide
+
+by
+
+```
+√d
+```
+
+where
+
+```
+d
+
+=
+
+Embedding Dimension
+```
+
+This is called
+
+```
+Scaled Dot Product Attention
+```
+
+We'll study it
+
+in the next chapter.
+
+---
+
+# PyTorch Example
+
+Let's create
+
+Query
+
+Key
+
+and
+
+Value.
+
+```python
+import torch
+import torch.nn as nn
+
+embedding_dim = 512
+
+sequence_length = 8
+
+batch_size = 2
+
+x = torch.randn(
+
+    batch_size,
+
+    sequence_length,
+
+    embedding_dim
+
+)
+
+query_layer = nn.Linear(
+
+    embedding_dim,
+
+    embedding_dim
+
+)
+
+key_layer = nn.Linear(
+
+    embedding_dim,
+
+    embedding_dim
+
+)
+
+value_layer = nn.Linear(
+
+    embedding_dim,
+
+    embedding_dim
+
+)
+
+Q = query_layer(x)
+
+K = key_layer(x)
+
+V = value_layer(x)
+
+print(Q.shape)
+print(K.shape)
+print(V.shape)
+```
+
+Output
+
+```
+torch.Size([2,8,512])
+
+torch.Size([2,8,512])
+
+torch.Size([2,8,512])
+```
+
+---
+
+# What Just Happened?
+
+Input
+
+```
+8 Tokens
+```
+
+Each token
+
+creates
+
+```
+Query
+
+Key
+
+Value
+```
+
+Nothing magical.
+
+Just
+
+three
+
+Linear Layers.
+
+---
+
+# Behind the Scenes of GPT
+
+Suppose
+
+Sentence
+
+```
+I love Artificial Intelligence
+```
+
+Pipeline
+
+```
+Tokenization
+
+↓
+
+Embeddings
+
+↓
+
+Linear Layer
+
+↓
+
+Query
+
+↓
+
+Linear Layer
+
+↓
+
+Key
+
+↓
+
+Linear Layer
+
+↓
+
+Value
+
+↓
+
+Attention
+
+↓
+
+Transformer Block
+```
+
+Every Transformer block
+
+does this repeatedly.
+
+---
+
+# Cheat Sheet
+
+| Term | Meaning |
+|------|----------|
+| Query | What am I looking for? |
+| Key | What information do I contain? |
+| Value | Information sent to the next layer |
+| Wq | Query Weight Matrix |
+| Wk | Key Weight Matrix |
+| Wv | Value Weight Matrix |
+| Dot Product | Similarity Measure |
+
+---
+
+# Summary
+
+- Every token creates three vectors: Query, Key, and Value.
+- Queries search for relevant information.
+- Keys describe what information each token contains.
+- Values carry the information that will be combined to produce the output.
+- Q, K, and V are generated using learnable linear layers.
+- Similarity between Query and Key is measured using the dot product.
+- Modern Transformers build attention using these three vectors.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Query in the Attention mechanism?
+2. What is the purpose of a Key?
+3. What information does a Value contain?
+4. Why are Q, K, and V generated using different weight matrices?
+5. What are `Wq`, `Wk`, and `Wv`?
+6. Why is the dot product used?
+7. What does a higher similarity score mean?
+8. Where do Q, K, and V come from in a Transformer?
+9. Why doesn't the model use the embedding directly as Q, K, and V?
+10. What operation is performed immediately after creating Q and K?
+
+---
+
+
+
+
+# Module 16 – Attention Mechanism
+
+# Part 3 – Scaled Dot Product Attention (Core of Every LLM)
+
+> This is the **most important equation** in modern AI.
+
+Everything from
+
+- GPT
+- ChatGPT
+- Llama
+- Gemma
+- Qwen
+- Claude
+- DeepSeek
+
+uses this computation.
+
+---
+
+# The Attention Formula
+
+The complete Attention equation is
+
+\[
+\boxed{
+Attention(Q,K,V)=Softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+}
+\]
+
+At first it looks scary.
+
+Don't worry.
+
+By the end of this chapter,
+
+it will become very simple.
+
+---
+
+# Story
+
+Imagine
+
+you are reading
+
+```
+The cat sat on the chair because it was broken.
+```
+
+While reading
+
+```
+it
+```
+
+your brain asks
+
+```
+Which previous word
+
+should I focus on?
+```
+
+It compares
+
+```
+Cat
+
+↓
+
+Chair
+
+↓
+
+Sat
+
+↓
+
+Broken
+```
+
+and finally decides
+
+```
+Chair
+```
+
+deserves the most attention.
+
+That decision
+
+is exactly
+
+what this formula computes.
+
+---
+
+# Step 1
+
+Create
+
+```
+Query
+
+Key
+
+Value
+```
+
+Example
+
+```
+Token
+
+↓
+
+Embedding
+
+↓
+
+Linear Layers
+
+↓
+
+Q
+
+K
+
+V
+```
+
+---
+
+# Step 2
+
+Compute Similarity
+
+Multiply
+
+```
+Query
+
+×
+
+Keyᵀ
+```
+
+Formula
+
+```
+QKᵀ
+```
+
+This tells
+
+how similar
+
+every word is
+
+to every other word.
+
+---
+
+# Example
+
+Sentence
+
+```
+I Love AI
+```
+
+Similarity Matrix
+
+```
+      I  Love AI
+
+I     4   2   1
+
+Love  2   5   3
+
+AI    1   3   6
+```
+
+Higher number
+
+↓
+
+Higher similarity.
+
+---
+
+# Why Transpose?
+
+Query
+
+Shape
+
+```
+3 × 64
+```
+
+Key
+
+Shape
+
+```
+3 × 64
+```
+
+Cannot multiply.
+
+Transpose
+
+Key
+
+```
+64 × 3
+```
+
+Now
+
+```
+(3×64)
+
+×
+
+(64×3)
+
+=
+
+3×3
+```
+
+Every word
+
+compares with
+
+every other word.
+
+---
+
+# Step 3
+
+Scale
+
+the Scores
+
+Suppose
+
+Embedding Size
+
+```
+4096
+```
+
+Dot Products
+
+become
+
+very large.
+
+Large numbers
+
+make
+
+Softmax unstable.
+
+Solution
+
+Divide
+
+by
+
+```
+√dₖ
+```
+
+Formula
+
+```
+QKᵀ
+
+────────
+
+√dₖ
+```
+
+Example
+
+```
+Embedding
+
+64
+
+↓
+
+√64
+
+=
+
+8
+```
+
+So
+
+instead of
+
+```
+160
+```
+
+we compute
+
+```
+160 / 8
+
+=
+
+20
+```
+
+This keeps values
+
+within
+
+a reasonable range.
+
+---
+
+# Why Scaling Works
+
+Without Scaling
+
+```
+Dot Product
+
+↓
+
+Huge Numbers
+
+↓
+
+Softmax
+
+↓
+
+Almost 0
+
+or
+
+Almost 1
+```
+
+Model
+
+stops learning
+
+efficiently.
+
+Scaling
+
+keeps gradients
+
+healthy.
+
+---
+
+# Step 4
+
+Apply Softmax
+
+Softmax converts
+
+scores
+
+into
+
+probabilities.
+
+Example
+
+Before
+
+```
+2
+
+5
+
+1
+```
+
+After
+
+```
+0.11
+
+0.81
+
+0.08
+```
+
+Notice
+
+Total
+
+```
+=
+
+1
+```
+
+Higher score
+
+↓
+
+Higher attention.
+
+---
+
+# Attention Scores
+
+Suppose
+
+```
+The Cat Sat
+```
+
+Attention Matrix
+
+```
+          The  Cat  Sat
+
+The       0.2  0.3  0.5
+
+Cat       0.1  0.8  0.1
+
+Sat       0.2  0.2  0.6
+```
+
+Each row
+
+represents
+
+how much
+
+one word
+
+attends
+
+to every other word.
+
+---
+
+# Step 5
+
+Multiply
+
+with Value
+
+Formula
+
+```
+Attention Scores
+
+×
+
+Value Matrix
+```
+
+This produces
+
+new embeddings
+
+that contain
+
+context.
+
+---
+
+# Complete Flow
+
+```
+Input Tokens
+
+↓
+
+Embeddings
+
+↓
+
+Query
+
+Key
+
+Value
+
+↓
+
+QKᵀ
+
+↓
+
+Scale
+
+↓
+
+Softmax
+
+↓
+
+Attention Scores
+
+↓
+
+×
+
+Value
+
+↓
+
+Context Vector
+```
+
+---
+
+# PyTorch Implementation
+
+```python
+import torch
+import torch.nn.functional as F
+
+batch_size = 2
+sequence_length = 5
+embedding_dim = 64
+
+Q = torch.randn(batch_size, sequence_length, embedding_dim)
+K = torch.randn(batch_size, sequence_length, embedding_dim)
+V = torch.randn(batch_size, sequence_length, embedding_dim)
+
+scores = torch.matmul(Q, K.transpose(-2, -1))
+
+scores = scores / (embedding_dim ** 0.5)
+
+attention = F.softmax(scores, dim=-1)
+
+output = torch.matmul(attention, V)
+
+print(output.shape)
+```
+
+Output
+
+```
+torch.Size([2, 5, 64])
+```
+
+This is the **core computation** inside every Transformer.
+
+---
+
+# Shape Analysis
+
+Input
+
+```
+Q
+
+(2,5,64)
+```
+
+Key
+
+```
+K
+
+(2,5,64)
+```
+
+Transpose
+
+```
+Kᵀ
+
+(2,64,5)
+```
+
+Multiply
+
+```
+QKᵀ
+
+↓
+
+(2,5,5)
+```
+
+Softmax
+
+↓
+
+```
+(2,5,5)
+```
+
+Multiply
+
+with
+
+Value
+
+↓
+
+```
+(2,5,64)
+```
+
+Final Output
+
+↓
+
+Context-aware embeddings.
+
+---
+
+# Real Example
+
+Sentence
+
+```
+The capital of France is Paris.
+```
+
+When processing
+
+```
+Paris
+```
+
+Attention
+
+assigns
+
+higher weights
+
+to
+
+```
+France
+
+Capital
+```
+
+and lower weights
+
+to
+
+```
+The
+
+Of
+
+Is
+```
+
+Thus,
+
+the output embedding for **Paris** contains more information about **France** than unrelated words.
+
+---
+
+# Visualization
+
+```
+Sentence
+
+↓
+
+Embeddings
+
+↓
+
+Q
+
+K
+
+V
+
+↓
+
+Similarity
+
+↓
+
+Softmax
+
+↓
+
+Attention
+
+↓
+
+Context
+
+↓
+
+Transformer
+```
+
+---
+
+# Why is Attention Better than RNN?
+
+RNN
+
+```
+Word1
+
+↓
+
+Word2
+
+↓
+
+Word3
+
+↓
+
+Word4
+```
+
+Attention
+
+```
+Word1 ↔ Word4
+
+Word2 ↔ Word3
+
+Word1 ↔ Word2
+
+Word4 ↔ Word1
+```
+
+Every token
+
+can directly
+
+communicate
+
+with every
+
+other token.
+
+---
+
+# Complexity
+
+Attention
+
+Time Complexity
+
+\[
+O(n^2)
+\]
+
+because
+
+every token
+
+compares
+
+with every
+
+other token.
+
+This quadratic complexity is one reason why very long context windows are computationally expensive.
+
+---
+
+# Cheat Sheet
+
+| Step | Operation |
+|------|-----------|
+| 1 | Create Q, K, V |
+| 2 | Compute QKᵀ |
+| 3 | Divide by √dₖ |
+| 4 | Apply Softmax |
+| 5 | Multiply with V |
+| 6 | Obtain Context Vector |
+
+---
+
+# Summary
+
+- Attention compares every token with every other token.
+- Q and K compute similarity.
+- Scaling by √dₖ stabilizes training.
+- Softmax converts similarity scores into attention weights.
+- The attention weights are used to combine the Value vectors.
+- The resulting context vectors become the input to the next Transformer layer.
+
+---
+
+# 🎤 Interview Questions
+
+1. Write the Attention equation.
+2. Why do we compute **QKᵀ**?
+3. Why do we divide by **√dₖ**?
+4. What is the purpose of Softmax?
+5. Why do we multiply by **V**?
+6. What is an Attention Matrix?
+7. What is the shape of **QKᵀ**?
+8. Why is Attention better than RNNs for long sequences?
+9. Why is the complexity of self-attention \(O(n^2)\)?
+10. Which modern AI models use Scaled Dot Product Attention?
+
+
+
+
+# Module 16 – Attention Mechanism
+
+# Part 4 – Multi-Head Attention (Why One Attention is Not Enough)
+
+> **Goal**
+>
+> Learn why Transformers use multiple attention heads instead of one, understand the complete Multi-Head Attention architecture, and implement it in PyTorch.
+
+---
+
+# 📚 Table of Contents
+
+- Why One Attention Head is Not Enough
+- What is Multi-Head Attention?
+- Head Splitting
+- Parallel Attention
+- Concatenation
+- Output Projection
+- Complete Workflow
+- PyTorch Implementation
+- MultiHeadAttention Layer
+- Applications
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine you are watching a cricket match.
+
+Can one person observe everything?
+
+No.
+
+One commentator watches
+
+```
+Batting
+```
+
+Another watches
+
+```
+Bowling
+```
+
+Another watches
+
+```
+Field Placement
+```
+
+Another watches
+
+```
+Scoreboard
+```
+
+Each person focuses on a different aspect.
+
+Finally,
+
+all observations are combined.
+
+This gives a much better understanding of the match.
+
+Transformers work exactly the same way.
+
+Instead of using
+
+```
+One Attention
+```
+
+they use
+
+```
+Many Attentions
+
+↓
+
+Different Perspectives
+
+↓
+
+Better Understanding
+```
+
+This is called
+
+> **Multi-Head Attention**
+
+---
+
+# Why Isn't One Attention Enough?
+
+Suppose we have the sentence
+
+```
+The boy is playing football in the park.
+```
+
+One attention head may focus on
+
+```
+Boy
+
+↓
+
+Playing
+```
+
+Another may focus on
+
+```
+Playing
+
+↓
+
+Football
+```
+
+Another may focus on
+
+```
+Playing
+
+↓
+
+Park
+```
+
+Different heads learn different relationships.
+
+---
+
+# Single Head Attention
+
+```
+Sentence
+
+↓
+
+Attention
+
+↓
+
+Output
+```
+
+Only
+
+one type
+
+of relationship
+
+is learned.
+
+---
+
+# Multi-Head Attention
+
+```
+Sentence
+
+↓
+
+Head 1
+
+↓
+
+Head 2
+
+↓
+
+Head 3
+
+↓
+
+Head 4
+
+↓
+
+Combine
+
+↓
+
+Final Output
+```
+
+Each head
+
+learns
+
+different patterns.
+
+---
+
+# Visual Representation
+
+```
+Input Embeddings
+
+        │
+
+ ┌──────┼──────┐
+
+ │      │      │
+
+Head1 Head2 Head3
+
+ │      │      │
+
+ └──────┼──────┘
+
+        │
+
+ Concatenate
+
+        │
+
+ Linear Layer
+
+        │
+
+ Final Output
+```
+
+---
+
+# How Many Heads?
+
+Popular Models
+
+| Model | Heads |
+|--------|-------|
+| BERT Base | 12 |
+| GPT-2 Small | 12 |
+| Llama 2 7B | 32 |
+| GPT-3 | 96 (varies by configuration) |
+
+More heads
+
+↓
+
+More relationships
+
+can be learned.
+
+---
+
+# Step 1
+
+Input Embedding
+
+Suppose
+
+```
+Batch = 2
+
+Tokens = 8
+
+Embedding = 512
+```
+
+Shape
+
+```
+(2,8,512)
+```
+
+---
+
+# Step 2
+
+Generate Q, K, V
+
+Exactly like
+
+Single Attention.
+
+```
+Embedding
+
+↓
+
+Linear
+
+↓
+
+Query
+
+↓
+
+Key
+
+↓
+
+Value
+```
+
+---
+
+# Step 3
+
+Split into Heads
+
+Suppose
+
+```
+Embedding = 512
+
+Heads = 8
+```
+
+Each head gets
+
+```
+512
+
+/
+
+8
+
+=
+
+64
+```
+
+dimensions.
+
+Shape changes
+
+```
+(2,8,512)
+
+↓
+
+(2,8,8,64)
+```
+
+Meaning
+
+```
+Batch
+
+Sequence
+
+Heads
+
+Head Dimension
+```
+
+---
+
+# Why Split?
+
+Instead of
+
+one large attention,
+
+we create
+
+multiple
+
+smaller attentions.
+
+Each head
+
+learns independently.
+
+---
+
+# Step 4
+
+Each Head Computes Attention
+
+Every head performs
+
+```
+QKᵀ
+
+↓
+
+Scale
+
+↓
+
+Softmax
+
+↓
+
+×
+
+V
+```
+
+Exactly
+
+the same formula
+
+we learned earlier.
+
+---
+
+# Step 5
+
+Concatenate Heads
+
+Suppose
+
+each head outputs
+
+```
+64 Features
+```
+
+Eight heads
+
+produce
+
+```
+64 × 8
+
+=
+
+512
+```
+
+Shape
+
+```
+(2,8,8,64)
+
+↓
+
+(2,8,512)
+```
+
+---
+
+# Step 6
+
+Output Projection
+
+After concatenation,
+
+one final
+
+Linear Layer
+
+mixes
+
+information
+
+from all heads.
+
+```
+Concatenate
+
+↓
+
+Linear Layer
+
+↓
+
+Final Representation
+```
+
+---
+
+# Complete Workflow
+
+```
+Input
+
+↓
+
+Q
+
+K
+
+V
+
+↓
+
+Split Heads
+
+↓
+
+Attention
+
+↓
+
+Concatenate
+
+↓
+
+Linear Layer
+
+↓
+
+Output
+```
+
+---
+
+# Mathematical Formula
+
+\[
+MultiHead(Q,K,V)=Concat(head_1,\dots,head_h)W^O
+\]
+
+where
+
+\[
+head_i = Attention(Q_i,K_i,V_i)
+\]
+
+Each head has
+
+its own
+
+Q
+
+K
+
+V
+
+projection matrices.
+
+---
+
+# PyTorch Example
+
+```python
+import torch
+import torch.nn as nn
+
+attention = nn.MultiheadAttention(
+
+    embed_dim=512,
+
+    num_heads=8,
+
+    batch_first=True
+
+)
+
+x = torch.randn(
+
+    2,
+
+    8,
+
+    512
+
+)
+
+output, weights = attention(
+
+    x,
+
+    x,
+
+    x
+
+)
+
+print(output.shape)
+
+print(weights.shape)
+```
+
+Output
+
+```
+torch.Size([2,8,512])
+
+torch.Size([2,8,8])
+```
+
+---
+
+# Why Three Inputs?
+
+Notice
+
+```python
+attention(
+
+x,
+
+x,
+
+x
+)
+```
+
+The three inputs are
+
+```
+Query
+
+Key
+
+Value
+```
+
+In Self-Attention,
+
+all three come
+
+from
+
+the same sequence.
+
+Later,
+
+in Cross-Attention,
+
+they may come
+
+from different sources.
+
+---
+
+# Building Multi-Head Attention (Simplified)
+
+```python
+class SimpleMHA(nn.Module):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.attention = nn.MultiheadAttention(
+
+            embed_dim=256,
+
+            num_heads=4,
+
+            batch_first=True
+
+        )
+
+    def forward(self,x):
+
+        output,_ = self.attention(
+
+            x,
+
+            x,
+
+            x
+
+        )
+
+        return output
+```
+
+---
+
+# Self-Attention vs Multi-Head Attention
+
+| Self-Attention | Multi-Head Attention |
+|----------------|----------------------|
+| One Attention | Multiple Attentions |
+| One Perspective | Multiple Perspectives |
+| Simpler | More Powerful |
+| Lower Capacity | Higher Capacity |
+
+---
+
+# Real Example
+
+Sentence
+
+```
+Apple released a new phone.
+```
+
+Head 1
+
+focuses on
+
+```
+Apple
+
+↓
+
+Company
+```
+
+Head 2
+
+focuses on
+
+```
+Released
+
+↓
+
+Action
+```
+
+Head 3
+
+focuses on
+
+```
+Phone
+
+↓
+
+Product
+```
+
+Combining
+
+all heads
+
+creates
+
+a richer understanding.
+
+---
+
+# Why It Works
+
+Instead of asking
+
+one question
+
+about the sentence,
+
+the model asks
+
+many questions
+
+at the same time.
+
+This makes
+
+Transformers
+
+much more expressive.
+
+---
+
+# Applications
+
+Multi-Head Attention
+
+is used in
+
+- GPT
+- BERT
+- Llama
+- Gemma
+- Qwen
+- DeepSeek
+- Vision Transformers
+- CLIP
+- Whisper
+
+---
+
+# Best Practices
+
+✅ Embedding Dimension should be divisible by Number of Heads.
+
+Example
+
+```
+512
+
+↓
+
+8 Heads
+
+↓
+
+64 per Head
+```
+
+---
+
+✅ Use multiple heads
+
+instead of one
+
+for better representations.
+
+---
+
+✅ Keep head dimensions balanced.
+
+---
+
+# Common Mistakes
+
+❌ Embedding size
+
+not divisible
+
+by heads.
+
+---
+
+❌ Confusing
+
+Self-Attention
+
+with
+
+Multi-Head Attention.
+
+---
+
+❌ Forgetting
+
+the final
+
+output projection.
+
+---
+
+# Cheat Sheet
+
+| Step | Operation |
+|------|-----------|
+| 1 | Generate Q, K, V |
+| 2 | Split into Heads |
+| 3 | Compute Attention for Each Head |
+| 4 | Concatenate Outputs |
+| 5 | Apply Output Linear Layer |
+
+---
+
+# 🤖 How GPT Uses Multi-Head Attention
+
+```
+Sentence
+
+↓
+
+Token Embeddings
+
+↓
+
+Head 1
+
+↓
+
+Head 2
+
+↓
+
+...
+
+↓
+
+Head 32
+
+↓
+
+Concatenate
+
+↓
+
+Linear Layer
+
+↓
+
+Transformer Block
+
+↓
+
+Next Layer
+```
+
+Every Transformer block
+
+contains
+
+Multi-Head Attention.
+
+Large language models
+
+stack
+
+dozens
+
+or even
+
+hundreds
+
+of these blocks.
+
+---
+
+# Summary
+
+- Multi-Head Attention extends self-attention by running several attention operations in parallel.
+- Each head learns different relationships in the input.
+- Outputs from all heads are concatenated and projected through a final linear layer.
+- The embedding dimension is split across the attention heads.
+- Multi-Head Attention is a core component of every Transformer architecture.
+
+---
+
+# 🎤 Interview Questions
+
+1. Why do we use Multi-Head Attention?
+2. What is the difference between Self-Attention and Multi-Head Attention?
+3. Why must the embedding dimension be divisible by the number of heads?
+4. What happens after concatenating all heads?
+5. Why does each head have its own projection matrices?
+6. What does `nn.MultiheadAttention` do?
+7. Why are multiple heads better than one?
+8. What are the three inputs to `nn.MultiheadAttention`?
+9. Where is Multi-Head Attention used?
+10. What happens if you double the number of heads while keeping the embedding size fixed?
+
+---
