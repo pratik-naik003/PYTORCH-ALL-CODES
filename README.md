@@ -23801,3 +23801,4518 @@ Research the tokenizer used by:
 ---
 
 
+
+# Module 20 – Hugging Face Hub & Model Management
+
+> **Goal**
+>
+> Learn how the Hugging Face Hub works, how to download and upload models, manage repositories, use authentication, work with `.safetensors`, and prepare models for sharing and deployment.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is Hugging Face Hub?
+- Why Hugging Face Hub?
+- Model Repository
+- Dataset Repository
+- Spaces
+- Access Tokens
+- Login
+- Downloading Models
+- Uploading Models
+- Model Cards
+- Dataset Cards
+- Safetensors
+- Model Versioning
+- Hub Workflow
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine GitHub
+
+but instead of
+
+storing
+
+```
+Python Files
+
+↓
+
+Java Files
+
+↓
+
+C++ Files
+```
+
+it stores
+
+```
+LLMs
+
+Datasets
+
+Tokenizers
+
+Diffusion Models
+
+Embeddings
+```
+
+That platform
+
+is
+
+```
+Hugging Face Hub
+```
+
+Millions of AI models
+
+are stored
+
+there.
+
+Whenever you write
+
+```python
+AutoModel.from_pretrained(...)
+```
+
+your model
+
+is usually downloaded
+
+from the Hub.
+
+---
+
+# What is Hugging Face Hub?
+
+It is
+
+an online platform
+
+where developers
+
+can
+
+- Share Models
+- Share Datasets
+- Share Tokenizers
+- Share AI Applications
+
+Think of it as
+
+```
+GitHub
+
++
+
+Docker Hub
+
++
+
+Model Zoo
+
+=
+
+Hugging Face Hub
+```
+
+---
+
+# Repository Types
+
+Hugging Face
+
+supports
+
+three main repositories.
+
+```
+Model Repository
+
+Dataset Repository
+
+Space Repository
+```
+
+---
+
+# Model Repository
+
+Stores
+
+```
+Weights
+
+Tokenizer
+
+Configuration
+
+README
+
+License
+```
+
+Example
+
+```
+meta-llama/Llama-3.2-1B
+```
+
+---
+
+# Dataset Repository
+
+Stores
+
+```
+Training Data
+
+Validation Data
+
+Test Data
+```
+
+Example
+
+```
+imdb
+
+squad
+
+cnn_dailymail
+```
+
+---
+
+# Spaces
+
+Spaces
+
+allow you
+
+to deploy
+
+AI applications.
+
+Supported Frameworks
+
+- Gradio
+- Streamlit
+- Docker
+
+Example
+
+```
+Chatbot
+
+↓
+
+Share Link
+
+↓
+
+Anyone Can Use It
+```
+
+---
+
+# Access Token
+
+Some models
+
+require
+
+authentication.
+
+Generate
+
+an Access Token
+
+from
+
+```
+Settings
+
+↓
+
+Access Tokens
+```
+
+Example
+
+```
+hf_xxxxxxxxxxxxx
+```
+
+Keep it secret.
+
+---
+
+# Login
+
+Install
+
+```bash
+pip install huggingface_hub
+```
+
+Login
+
+```bash
+huggingface-cli login
+```
+
+Paste
+
+your
+
+Access Token.
+
+Python
+
+```python
+from huggingface_hub import login
+
+login("hf_xxxxxxxxx")
+```
+
+---
+
+# Downloading a Model
+
+```python
+from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM
+
+model_name = "gpt2"
+
+tokenizer = AutoTokenizer.from_pretrained(
+
+    model_name
+
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    model_name
+
+)
+```
+
+The first time,
+
+files are downloaded.
+
+Later,
+
+they are loaded
+
+from the local cache.
+
+---
+
+# Local Cache
+
+Downloaded models
+
+are stored
+
+locally.
+
+Benefits
+
+- Faster Loading
+- Offline Usage
+- No Re-download
+
+---
+
+# Uploading a Model
+
+Suppose
+
+you fine-tuned
+
+Llama.
+
+Save it
+
+```python
+model.save_pretrained(
+
+    "./my_model"
+
+)
+
+tokenizer.save_pretrained(
+
+    "./my_model"
+
+)
+```
+
+Upload
+
+```python
+from huggingface_hub import upload_folder
+
+upload_folder(
+
+    folder_path="./my_model",
+
+    repo_id="username/my_model",
+
+    repo_type="model"
+
+)
+```
+
+---
+
+# Model Card
+
+Every model
+
+should include
+
+documentation.
+
+Model Card
+
+contains
+
+- Description
+- Training Data
+- Intended Use
+- Limitations
+- License
+- Metrics
+
+Usually written
+
+in
+
+```
+README.md
+```
+
+---
+
+# Example Model Card
+
+```markdown
+# Medical Assistant
+
+Base Model
+
+Llama 3.2
+
+Dataset
+
+Medical QA
+
+Language
+
+English
+
+License
+
+Apache-2.0
+```
+
+---
+
+# Dataset Card
+
+Every dataset
+
+should describe
+
+- Source
+- Size
+- Labels
+- Preprocessing
+- License
+
+This improves
+
+reproducibility
+
+and transparency.
+
+---
+
+# Model Files
+
+Typical repository
+
+contains
+
+```
+config.json
+
+tokenizer.json
+
+tokenizer_config.json
+
+special_tokens_map.json
+
+model.safetensors
+
+generation_config.json
+
+README.md
+```
+
+---
+
+# What is config.json?
+
+Contains
+
+model architecture.
+
+Example
+
+```
+Hidden Size
+
+Layers
+
+Heads
+
+Vocabulary Size
+```
+
+Without it,
+
+the model
+
+cannot be reconstructed correctly.
+
+---
+
+# What is tokenizer.json?
+
+Stores
+
+the tokenizer
+
+configuration
+
+and vocabulary.
+
+Must match
+
+the model.
+
+---
+
+# What is generation_config.json?
+
+Stores
+
+default generation settings.
+
+Example
+
+```
+Temperature
+
+Top-p
+
+Max Tokens
+
+EOS Token
+```
+
+---
+
+# What is .safetensors?
+
+Modern models
+
+are usually stored as
+
+```
+model.safetensors
+```
+
+instead of
+
+```
+pytorch_model.bin
+```
+
+Advantages
+
+✅ Faster Loading
+
+✅ Safe Format
+
+✅ No Pickle Execution
+
+Preferred
+
+for modern
+
+LLMs.
+
+---
+
+# Why Safetensors?
+
+Older
+
+```
+.bin
+```
+
+files
+
+may rely on Python's pickle mechanism.
+
+`.safetensors`
+
+stores tensors
+
+without executing arbitrary code during loading,
+
+making it a safer format for sharing models.
+
+---
+
+# Model Versioning
+
+Example
+
+```
+v1
+
+↓
+
+v2
+
+↓
+
+v3
+
+```
+
+Every update
+
+can improve
+
+- Accuracy
+- Speed
+- Dataset
+
+The Hub
+
+tracks
+
+revisions,
+
+making it easier to reproduce experiments.
+
+---
+
+# Complete Workflow
+
+```
+Train Model
+
+↓
+
+Save
+
+↓
+
+Upload
+
+↓
+
+Hub
+
+↓
+
+Download
+
+↓
+
+Inference
+```
+
+---
+
+# Using a Fine-Tuned Model
+
+```python
+tokenizer = AutoTokenizer.from_pretrained(
+
+    "username/my_model"
+
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "username/my_model"
+
+)
+```
+
+Exactly
+
+the same API
+
+as
+
+official models.
+
+---
+
+# Repository Structure
+
+```
+my-model/
+
+│
+
+├── config.json
+
+├── model.safetensors
+
+├── tokenizer.json
+
+├── tokenizer_config.json
+
+├── special_tokens_map.json
+
+├── generation_config.json
+
+├── README.md
+
+└── LICENSE
+```
+
+---
+
+# Best Practices
+
+✅ Write a clear Model Card.
+
+✅ Upload tokenizer with the model.
+
+✅ Use `.safetensors` when possible.
+
+✅ Add a license.
+
+✅ Document datasets and training details.
+
+---
+
+# Common Mistakes
+
+❌ Uploading only model weights.
+
+❌ Forgetting the tokenizer.
+
+❌ Missing README.
+
+❌ Sharing private access tokens.
+
+---
+
+# Cheat Sheet
+
+| File | Purpose |
+|------|----------|
+| `config.json` | Model Configuration |
+| `model.safetensors` | Model Weights |
+| `tokenizer.json` | Tokenizer |
+| `generation_config.json` | Generation Defaults |
+| `README.md` | Model Card |
+| `LICENSE` | Usage Terms |
+
+---
+
+# 🤖 Real LLM Workflow
+
+```
+Fine-Tune
+
+↓
+
+Save Model
+
+↓
+
+Save Tokenizer
+
+↓
+
+Upload to Hub
+
+↓
+
+Share Link
+
+↓
+
+Inference Anywhere
+```
+
+This is
+
+how developers
+
+share
+
+Llama,
+
+Gemma,
+
+Qwen,
+
+Mistral,
+
+and many other models.
+
+---
+
+# Summary
+
+- Hugging Face Hub is the central platform for sharing AI models and datasets.
+- Models, datasets, and Spaces each have dedicated repository types.
+- Access tokens enable authentication for protected resources.
+- `.safetensors` is the preferred format for storing modern model weights.
+- A complete model repository includes weights, tokenizer files, configuration, and documentation.
+- Good model cards improve reproducibility and usability.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Hugging Face Hub?
+2. Difference between a Model Repository and a Dataset Repository?
+3. What is a Space?
+4. Why do we use Access Tokens?
+5. Why is `.safetensors` preferred?
+6. What is stored in `config.json`?
+7. Why should the tokenizer be uploaded with the model?
+8. What is a Model Card?
+9. What is the purpose of `generation_config.json`?
+10. How do you share a fine-tuned model with others?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a Hugging Face account.
+
+---
+
+### Exercise 2
+
+Generate an Access Token and log in using the CLI.
+
+---
+
+### Exercise 3
+
+Download a small model such as GPT-2 and inspect the downloaded files.
+
+---
+
+### Exercise 4
+
+Create a sample Model Card (`README.md`) for an imaginary fine-tuned chatbot.
+
+---
+
+### Exercise 5
+
+Save a local model using `save_pretrained()` and examine the generated directory structure.
+
+---
+
+
+# Module 21 – PEFT (Parameter Efficient Fine-Tuning)
+
+> **Goal**
+>
+> Learn why modern LLMs are rarely fine-tuned using all their parameters, understand different PEFT techniques, and prepare for LoRA, QLoRA, and Unsloth.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Full Fine-Tuning?
+- Problems with Full Fine-Tuning
+- What is PEFT?
+- How PEFT Works
+- Trainable vs Frozen Parameters
+- Different PEFT Methods
+- Prompt Tuning
+- Prefix Tuning
+- P-Tuning
+- Adapters
+- IA³
+- LoRA (Introduction)
+- PEFT Library
+- Practical Example
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you bought
+
+a Ferrari.
+
+Now
+
+you want
+
+to change
+
+its color.
+
+Would you
+
+rebuild
+
+the entire car?
+
+```
+Engine
+
+Transmission
+
+Tyres
+
+Seats
+
+Battery
+```
+
+No.
+
+You simply
+
+paint
+
+the body.
+
+Small change.
+
+Huge impact.
+
+LLM Fine-Tuning
+
+works exactly
+
+the same way.
+
+Instead of
+
+changing
+
+billions
+
+of parameters,
+
+we only
+
+train
+
+a very small part.
+
+This idea
+
+is called
+
+```
+PEFT
+```
+
+---
+
+# Before PEFT
+
+Suppose
+
+Llama 7B
+
+contains
+
+```
+7 Billion Parameters
+```
+
+Traditional Fine-Tuning
+
+updates
+
+all
+
+```
+7 Billion
+```
+
+parameters.
+
+Problems
+
+❌ Huge GPU Memory
+
+❌ Expensive
+
+❌ Slow
+
+❌ Large Checkpoints
+
+---
+
+# Example
+
+Suppose
+
+a model has
+
+```
+7,000,000,000
+
+Parameters
+```
+
+Each parameter
+
+is stored
+
+using
+
+```
+16 Bits
+
+(2 Bytes)
+```
+
+Memory
+
+```
+≈14 GB
+
+Only
+
+Weights
+```
+
+During training
+
+Optimizer States
+
+Gradients
+
+Activations
+
+also consume memory.
+
+Actual memory
+
+can become
+
+```
+40–80 GB+
+
+```
+
+depending on
+
+the optimizer
+
+and training setup.
+
+---
+
+# Why Full Fine-Tuning is Difficult?
+
+Suppose
+
+you have
+
+```
+RTX 3060
+
+12 GB
+```
+
+Can you
+
+fully fine-tune
+
+```
+Llama-7B
+```
+
+No.
+
+Memory
+
+is not enough.
+
+---
+
+# Solution
+
+Freeze
+
+almost
+
+everything.
+
+Train
+
+only
+
+a few parameters.
+
+```
+7 Billion
+
+↓
+
+5 Million
+
+↓
+
+Training
+```
+
+This is
+
+Parameter Efficient
+
+Fine-Tuning.
+
+---
+
+# What is PEFT?
+
+PEFT means
+
+```
+Parameter
+
+Efficient
+
+Fine-Tuning
+```
+
+Instead of
+
+training
+
+the whole model,
+
+we train
+
+only
+
+small additional
+
+parameters.
+
+---
+
+# Visual Comparison
+
+Full Fine-Tuning
+
+```
+██████████████████████████
+
+Train Everything
+```
+
+PEFT
+
+```
+██████████░░░░░░░░░░░░░░░░
+
+Train Small Part
+```
+
+Frozen parameters
+
+stay unchanged.
+
+---
+
+# Frozen Parameters
+
+During training
+
+```
+Requires Grad
+
+False
+```
+
+PyTorch
+
+```python
+for param in model.parameters():
+
+    param.requires_grad = False
+```
+
+The pretrained knowledge
+
+remains
+
+unchanged.
+
+---
+
+# Trainable Parameters
+
+Only
+
+small modules
+
+are trainable.
+
+```
+Frozen Model
+
+↓
+
+Small Adapter
+
+↓
+
+Training
+```
+
+---
+
+# Why PEFT Works
+
+Remember
+
+the pretrained model
+
+already knows
+
+- English
+- Programming
+- Mathematics
+- Science
+
+We don't
+
+teach
+
+everything again.
+
+We only
+
+teach
+
+the new task.
+
+Example
+
+```
+Medical Chatbot
+
+↓
+
+Medical Dataset
+
+↓
+
+Small Update
+```
+
+---
+
+# Popular PEFT Methods
+
+```
+PEFT
+
+│
+
+├── Prompt Tuning
+
+├── Prefix Tuning
+
+├── P-Tuning
+
+├── Adapters
+
+├── IA³
+
+└── LoRA
+```
+
+---
+
+# Prompt Tuning
+
+Idea
+
+Instead of
+
+changing
+
+the model,
+
+learn
+
+special prompt vectors.
+
+```
+Prompt
+
+↓
+
+Embedding
+
+↓
+
+Model
+```
+
+Only
+
+the prompt
+
+is trained.
+
+---
+
+# Prefix Tuning
+
+Instead of
+
+training
+
+the whole model,
+
+learn
+
+small
+
+prefix vectors
+
+that are added
+
+to each Transformer layer.
+
+---
+
+# P-Tuning
+
+An improved
+
+version
+
+of Prompt Tuning.
+
+Uses
+
+learnable embeddings
+
+instead of
+
+hand-written prompts.
+
+---
+
+# Adapters
+
+Small neural networks
+
+are inserted
+
+between
+
+Transformer layers.
+
+```
+Transformer
+
+↓
+
+Adapter
+
+↓
+
+Transformer
+```
+
+Only
+
+Adapters
+
+are trained.
+
+---
+
+# IA³
+
+IA³ stands for
+
+```
+Infused Adapter
+
+by
+
+Inhibiting
+
+and
+
+Amplifying
+
+Inner Activations
+```
+
+Instead of
+
+adding
+
+new layers,
+
+it learns
+
+small scaling vectors
+
+inside
+
+the Transformer.
+
+Advantages
+
+- Very few trainable parameters
+- Low memory usage
+
+---
+
+# LoRA (Introduction)
+
+LoRA
+
+is
+
+the most popular
+
+PEFT method.
+
+Instead of
+
+updating
+
+the original
+
+weight matrix
+
+```
+W
+```
+
+LoRA learns
+
+a small update
+
+```
+ΔW
+```
+
+Final weight
+
+becomes
+
+```
+W + ΔW
+```
+
+Original model
+
+remains
+
+unchanged.
+
+We'll study
+
+LoRA
+
+in the next module.
+
+---
+
+# PEFT Library
+
+Install
+
+```bash
+pip install peft
+```
+
+Import
+
+```python
+from peft import (
+    get_peft_model,
+    LoraConfig
+)
+```
+
+The PEFT library
+
+provides
+
+implementations
+
+of
+
+- LoRA
+- Prompt Tuning
+- Prefix Tuning
+- IA³
+- AdaLoRA
+
+---
+
+# Example
+
+Load
+
+a pretrained model
+
+```python
+from transformers import AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "gpt2"
+
+)
+```
+
+Freeze
+
+all parameters
+
+```python
+for param in model.parameters():
+
+    param.requires_grad = False
+```
+
+Now
+
+only
+
+PEFT layers
+
+will learn.
+
+---
+
+# Checking Trainable Parameters
+
+```python
+trainable = sum(
+
+    p.numel()
+
+    for p in model.parameters()
+
+    if p.requires_grad
+
+)
+
+total = sum(
+
+    p.numel()
+
+    for p in model.parameters()
+
+)
+
+print(
+
+    f"Trainable: {trainable:,}"
+
+)
+
+print(
+
+    f"Total: {total:,}"
+
+)
+```
+
+This is
+
+commonly printed
+
+before training
+
+to verify
+
+that only
+
+the intended parameters
+
+are trainable.
+
+---
+
+# Full Fine-Tuning vs PEFT
+
+| Feature | Full Fine-Tuning | PEFT |
+|----------|-----------------|------|
+| Train All Parameters | ✅ | ❌ |
+| GPU Memory | Very High | Low |
+| Speed | Slower | Faster |
+| Storage | Large | Small |
+| Consumer GPU Friendly | ❌ | ✅ |
+
+---
+
+# Where PEFT is Used
+
+PEFT
+
+is widely used
+
+for
+
+- Llama
+- Gemma
+- Qwen
+- Mistral
+- Phi
+- Falcon
+
+Almost every
+
+open-source
+
+LLM project
+
+uses
+
+PEFT
+
+or
+
+LoRA.
+
+---
+
+# Complete Workflow
+
+```
+Pretrained Model
+
+↓
+
+Freeze Parameters
+
+↓
+
+Add PEFT Layers
+
+↓
+
+Train
+
+↓
+
+Save Adapter
+
+↓
+
+Load Adapter
+
+↓
+
+Inference
+```
+
+---
+
+# Best Practices
+
+✅ Use PEFT for consumer GPUs.
+
+✅ Keep the base model frozen.
+
+✅ Save adapters separately.
+
+✅ Use LoRA for most LLM fine-tuning tasks.
+
+---
+
+# Common Mistakes
+
+❌ Accidentally training the full model.
+
+❌ Forgetting to freeze parameters.
+
+❌ Using PEFT with the wrong target modules.
+
+❌ Assuming every PEFT method works equally well for every task.
+
+---
+
+# Cheat Sheet
+
+| Technique | Idea |
+|-----------|------|
+| Prompt Tuning | Learn Prompt Embeddings |
+| Prefix Tuning | Learn Prefix Vectors |
+| P-Tuning | Learn Continuous Prompts |
+| Adapters | Small Neural Layers |
+| IA³ | Learn Scaling Vectors |
+| LoRA | Learn Low-Rank Weight Updates |
+
+---
+
+# 🤖 Why Modern AI Uses PEFT
+
+Without PEFT
+
+```
+70 Billion Parameters
+
+↓
+
+Full Fine-Tuning
+
+↓
+
+Multiple High-End GPUs
+```
+
+With PEFT
+
+```
+70 Billion Parameters
+
+↓
+
+Freeze Base Model
+
+↓
+
+Train Small Adapter
+
+↓
+
+Consumer GPU
+```
+
+This breakthrough
+
+made LLM fine-tuning
+
+accessible
+
+to many more developers.
+
+---
+
+# Summary
+
+- Full fine-tuning updates every parameter and requires substantial hardware.
+- PEFT trains only a small subset of additional parameters while keeping the base model frozen.
+- Popular PEFT methods include Prompt Tuning, Prefix Tuning, Adapters, IA³, and LoRA.
+- LoRA has become the most widely used approach for efficient LLM fine-tuning.
+- PEFT significantly reduces GPU memory, storage requirements, and training time.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is PEFT?
+2. Why is Full Fine-Tuning expensive?
+3. What is the difference between Frozen and Trainable parameters?
+4. Why is PEFT useful for LLMs?
+5. What are Adapters?
+6. What is Prefix Tuning?
+7. What is Prompt Tuning?
+8. What is IA³?
+9. Why has LoRA become the most popular PEFT method?
+10. When would you choose PEFT instead of Full Fine-Tuning?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Load a pretrained GPT-2 model and print the total number of parameters.
+
+---
+
+### Exercise 2
+
+Freeze all parameters and verify that no gradients will be computed.
+
+---
+
+### Exercise 3
+
+Count trainable vs total parameters.
+
+---
+
+### Exercise 4
+
+Read the PEFT documentation and identify all supported tuning methods.
+
+---
+
+### Exercise 5
+
+Compare the estimated memory requirements of Full Fine-Tuning and PEFT for a 7B model.
+
+---
+
+
+# Module 22 – LoRA (Low-Rank Adaptation)
+
+> **Goal**
+>
+> Master LoRA from scratch, understand the mathematics behind it, learn every important configuration parameter, and fine-tune an LLM using Hugging Face + PEFT.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why LoRA?
+- Matrix Refresher
+- What is Low Rank?
+- Why Low Rank Works
+- LoRA Mathematics
+- Rank (r)
+- Alpha (α)
+- Dropout
+- Target Modules
+- LoraConfig
+- Applying LoRA
+- Training Pipeline
+- Saving & Loading Adapters
+- Merge LoRA
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you own
+
+a huge library.
+
+```
+10 Million Books
+```
+
+Now
+
+one book
+
+contains
+
+a spelling mistake.
+
+Would you
+
+rewrite
+
+the entire library?
+
+No.
+
+You only
+
+change
+
+that one page.
+
+LoRA works
+
+exactly
+
+the same way.
+
+Instead of
+
+changing
+
+billions
+
+of parameters,
+
+it learns
+
+a very small correction.
+
+---
+
+# Before LoRA
+
+Full Fine-Tuning
+
+```
+Weight Matrix
+
+↓
+
+Update Everything
+```
+
+After training
+
+the original model
+
+changes permanently.
+
+Memory
+
+↓
+
+Huge
+
+Storage
+
+↓
+
+Huge
+
+---
+
+# LoRA Idea
+
+Keep
+
+the original
+
+weight matrix
+
+unchanged.
+
+Learn
+
+only
+
+a small update.
+
+```
+Original Weight
+
++
+
+Small Update
+
+=
+
+Final Weight
+```
+
+---
+
+# Matrix Refresher
+
+Suppose
+
+```
+W
+
+=
+
+4096 × 4096
+```
+
+Number of Parameters
+
+```
+16 Million+
+```
+
+Training
+
+all of them
+
+is expensive.
+
+---
+
+# Low Rank
+
+Instead of
+
+learning
+
+```
+4096 × 4096
+```
+
+LoRA learns
+
+two smaller matrices.
+
+```
+A
+
+↓
+
+4096 × r
+
+B
+
+↓
+
+r × 4096
+```
+
+where
+
+```
+r
+
+<<
+
+4096
+```
+
+Example
+
+```
+r = 16
+```
+
+Now
+
+far fewer parameters
+
+need training.
+
+---
+
+# LoRA Formula
+
+Instead of
+
+updating
+
+```
+W
+```
+
+we compute
+
+\[
+W' = W + BA
+\]
+
+where
+
+- **W** = Frozen pretrained weights
+- **A** and **B** = Trainable low-rank matrices
+
+Only
+
+```
+A
+
+and
+
+B
+```
+
+are updated.
+
+---
+
+# Why Does It Work?
+
+The pretrained model
+
+already contains
+
+most of
+
+the knowledge.
+
+LoRA only learns
+
+the small adjustment
+
+required
+
+for the new task.
+
+Think of it as
+
+```
+Base Knowledge
+
++
+
+Small Correction
+
+↓
+
+New Skill
+```
+
+---
+
+# Understanding Rank (r)
+
+Rank
+
+controls
+
+the size
+
+of
+
+LoRA matrices.
+
+Example
+
+```
+r = 4
+
+↓
+
+Very Small
+
+↓
+
+Less Memory
+
+↓
+
+Lower Capacity
+```
+
+```
+r = 64
+
+↓
+
+More Parameters
+
+↓
+
+Better Learning
+
+↓
+
+Higher Memory
+```
+
+Typical values
+
+```
+8
+
+16
+
+32
+
+64
+```
+
+---
+
+# Alpha (α)
+
+Alpha
+
+controls
+
+the strength
+
+of the LoRA update.
+
+Effective scaling
+
+is approximately
+
+\[
+\frac{\alpha}{r}
+\]
+
+Example
+
+```
+r = 16
+
+α = 32
+
+Scaling = 2
+```
+
+Higher alpha
+
+gives
+
+LoRA updates
+
+more influence.
+
+---
+
+# LoRA Dropout
+
+Dropout
+
+helps
+
+prevent
+
+overfitting.
+
+```python
+lora_dropout = 0.05
+```
+
+Typical values
+
+```
+0.0
+
+0.05
+
+0.1
+```
+
+---
+
+# Target Modules
+
+LoRA
+
+is usually applied
+
+to
+
+attention layers.
+
+Common targets
+
+```
+q_proj
+
+k_proj
+
+v_proj
+
+o_proj
+```
+
+Some models
+
+also fine-tune
+
+```
+gate_proj
+
+up_proj
+
+down_proj
+```
+
+---
+
+# Visual Representation
+
+```
+Input
+
+↓
+
+Linear Layer
+
+↓
+
+LoRA Adapter
+
+↓
+
+Output
+```
+
+Original
+
+Linear Layer
+
+remains
+
+frozen.
+
+---
+
+# Installing Libraries
+
+```bash
+pip install peft transformers
+```
+
+---
+
+# Creating LoraConfig
+
+```python
+from peft import LoraConfig
+
+config = LoraConfig(
+
+    r=16,
+
+    lora_alpha=32,
+
+    lora_dropout=0.05,
+
+    bias="none",
+
+    task_type="CAUSAL_LM",
+
+    target_modules=[
+
+        "q_proj",
+
+        "v_proj"
+
+    ]
+
+)
+```
+
+---
+
+# Understanding Parameters
+
+| Parameter | Meaning |
+|------------|----------|
+| r | Rank |
+| lora_alpha | Scaling Factor |
+| lora_dropout | Regularization |
+| bias | Bias Training |
+| task_type | Model Task |
+| target_modules | Layers to Modify |
+
+---
+
+# Loading Base Model
+
+```python
+from transformers import AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "meta-llama/Llama-3.2-1B"
+
+)
+```
+
+---
+
+# Apply LoRA
+
+```python
+from peft import get_peft_model
+
+model = get_peft_model(
+
+    model,
+
+    config
+
+)
+```
+
+Done.
+
+LoRA
+
+has now
+
+been added
+
+to the model.
+
+---
+
+# Verify Trainable Parameters
+
+```python
+model.print_trainable_parameters()
+```
+
+Example Output
+
+```
+trainable params:
+
+4,194,304
+
+all params:
+
+1,236,000,000
+
+trainable%
+
+0.34%
+```
+
+Only
+
+a tiny fraction
+
+of parameters
+
+are trained.
+
+---
+
+# Training Loop
+
+```python
+from transformers import Trainer
+
+trainer = Trainer(
+
+    model=model,
+
+    train_dataset=train_dataset,
+
+    args=training_args
+
+)
+
+trainer.train()
+```
+
+LoRA
+
+works
+
+with
+
+the standard
+
+Hugging Face
+
+training pipeline.
+
+---
+
+# Saving LoRA
+
+```python
+model.save_pretrained(
+
+    "./lora_adapter"
+
+)
+```
+
+Notice
+
+only
+
+the adapter
+
+is saved.
+
+Not
+
+the entire
+
+LLM.
+
+---
+
+# Loading LoRA
+
+```python
+from peft import PeftModel
+
+base_model = AutoModelForCausalLM.from_pretrained(
+
+    "meta-llama/Llama-3.2-1B"
+
+)
+
+model = PeftModel.from_pretrained(
+
+    base_model,
+
+    "./lora_adapter"
+
+)
+```
+
+The base model
+
+and adapter
+
+are combined
+
+during loading.
+
+---
+
+# Merging LoRA
+
+Sometimes
+
+you want
+
+a standalone model.
+
+```python
+merged_model = model.merge_and_unload()
+```
+
+Now
+
+the LoRA weights
+
+are merged
+
+into
+
+the base model.
+
+---
+
+# Complete Workflow
+
+```
+Load Base Model
+
+↓
+
+Create LoraConfig
+
+↓
+
+Apply LoRA
+
+↓
+
+Train
+
+↓
+
+Save Adapter
+
+↓
+
+Load Adapter
+
+↓
+
+Inference
+```
+
+---
+
+# Full Fine-Tuning vs LoRA
+
+| Feature | Full FT | LoRA |
+|----------|----------|------|
+| Train All Parameters | ✅ | ❌ |
+| GPU Memory | Very High | Low |
+| Speed | Slower | Faster |
+| Adapter Size | Large | Small |
+| Consumer GPU Friendly | ❌ | ✅ |
+
+---
+
+# Real-World Usage
+
+LoRA
+
+is widely used
+
+for
+
+- Chatbots
+- Medical Assistants
+- Code Models
+- Translation
+- Domain Adaptation
+- Instruction Tuning
+
+---
+
+# Best Practices
+
+✅ Start with
+
+```
+r = 16
+```
+
+for many general tasks.
+
+---
+
+✅ Target
+
+```
+q_proj
+
+v_proj
+```
+
+first,
+
+then experiment
+
+with additional modules.
+
+---
+
+✅ Save
+
+adapters
+
+instead of
+
+the full model
+
+when sharing fine-tuning results.
+
+---
+
+# Common Mistakes
+
+❌ Setting
+
+rank
+
+too high.
+
+---
+
+❌ Applying LoRA
+
+to unsupported modules.
+
+---
+
+❌ Forgetting
+
+to use
+
+the matching
+
+base model
+
+when loading
+
+an adapter.
+
+---
+
+# Cheat Sheet
+
+| Parameter | Typical Value |
+|------------|---------------|
+| r | 8–32 |
+| Alpha | 16–64 |
+| Dropout | 0.05 |
+| Bias | none |
+| Task | CAUSAL_LM |
+
+---
+
+# 🤖 How Industry Uses LoRA
+
+```
+Llama
+
+↓
+
+LoRA
+
+↓
+
+Medical Assistant
+
+------------
+
+Gemma
+
+↓
+
+LoRA
+
+↓
+
+Legal Chatbot
+
+------------
+
+Qwen
+
+↓
+
+LoRA
+
+↓
+
+Coding Assistant
+```
+
+Instead of
+
+training
+
+billions
+
+of parameters,
+
+companies
+
+train
+
+small adapters
+
+for
+
+different domains.
+
+---
+
+# Summary
+
+- LoRA keeps the pretrained weights frozen.
+- Two low-rank matrices learn the required weight updates.
+- Only a small percentage of parameters are trained.
+- LoRA dramatically reduces GPU memory and storage requirements.
+- Adapters can be saved, shared, loaded, or merged back into the base model.
+- LoRA is the foundation for most modern open-source LLM fine-tuning workflows.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is LoRA?
+2. Why is LoRA more efficient than Full Fine-Tuning?
+3. What does the rank (r) parameter control?
+4. What is the purpose of `lora_alpha`?
+5. Why do we use `target_modules`?
+6. What does `get_peft_model()` do?
+7. Why are adapters smaller than full models?
+8. What is `merge_and_unload()` used for?
+9. Why is the base model kept frozen?
+10. Where is LoRA commonly used?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a `LoraConfig` for a causal language model.
+
+---
+
+### Exercise 2
+
+Apply LoRA to a small GPT-2 model and print the trainable parameter count.
+
+---
+
+### Exercise 3
+
+Experiment with different values of:
+
+- `r`
+- `lora_alpha`
+- `lora_dropout`
+
+Observe how the number of trainable parameters changes.
+
+---
+
+### Exercise 4
+
+Save and reload a LoRA adapter.
+
+---
+
+### Exercise 5
+
+Merge the adapter into the base model and compare inference results before and after merging.
+
+---
+
+
+
+
+# Module 23 – QLoRA (Quantized LoRA)
+
+> **Goal**
+>
+> Learn how QLoRA makes it possible to fine-tune large language models on consumer GPUs by combining **4-bit quantization** with **LoRA**.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why QLoRA?
+- What is Quantization?
+- FP32 vs FP16 vs INT8 vs INT4
+- Why LoRA Alone Isn't Enough
+- QLoRA Architecture
+- NF4 Quantization
+- Double Quantization
+- BitsAndBytesConfig
+- Loading 4-bit Models
+- Fine-Tuning Pipeline
+- Saving the Adapter
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you have
+
+a huge suitcase.
+
+```
+50 KG
+```
+
+You need
+
+to carry it
+
+upstairs.
+
+Very difficult.
+
+Now imagine
+
+you compress
+
+everything
+
+inside.
+
+```
+50 KG
+
+↓
+
+15 KG
+```
+
+The suitcase
+
+still contains
+
+the same items,
+
+but occupies
+
+much less space.
+
+Quantization
+
+does the same
+
+for neural networks.
+
+Instead of storing
+
+large numbers,
+
+it stores
+
+smaller ones.
+
+Less memory.
+
+Faster loading.
+
+Cheaper training.
+
+---
+
+# Before QLoRA
+
+Full Fine-Tuning
+
+```
+Llama-7B
+
+↓
+
+Train All Parameters
+
+↓
+
+40GB+
+
+GPU Memory
+```
+
+LoRA
+
+reduced
+
+trainable parameters,
+
+but
+
+the entire model
+
+was still loaded
+
+using
+
+FP16.
+
+Large models
+
+still required
+
+significant memory.
+
+---
+
+# QLoRA Idea
+
+```
+Base Model
+
+↓
+
+4-bit Quantization
+
+↓
+
+Frozen
+
++
+
+LoRA Adapters
+
+↓
+
+Training
+```
+
+The base model
+
+is compressed.
+
+Only
+
+LoRA
+
+is trained.
+
+---
+
+# What is Quantization?
+
+Quantization means
+
+storing numbers
+
+using fewer bits.
+
+Example
+
+| Format | Bits |
+|----------|------|
+| FP32 | 32 |
+| FP16 | 16 |
+| INT8 | 8 |
+| INT4 | 4 |
+
+Fewer bits
+
+↓
+
+Less memory.
+
+---
+
+# Memory Example
+
+Suppose
+
+a model has
+
+```
+7 Billion Parameters
+```
+
+Approximate memory
+
+| Format | Memory |
+|----------|---------|
+| FP32 | ~28 GB |
+| FP16 | ~14 GB |
+| INT8 | ~7 GB |
+| INT4 | ~3.5 GB |
+
+This is why
+
+4-bit models
+
+can fit
+
+on consumer GPUs.
+
+---
+
+# Why Not Train INT4?
+
+Question
+
+```
+If INT4
+
+is so small,
+
+why not
+
+train
+
+everything
+
+in INT4?
+```
+
+Answer
+
+Because
+
+training
+
+needs
+
+high precision.
+
+QLoRA
+
+stores
+
+weights
+
+in
+
+4-bit,
+
+but
+
+important computations
+
+are still performed
+
+using higher precision
+
+(e.g., FP16 or BF16 depending on the setup).
+
+---
+
+# QLoRA Workflow
+
+```
+Pretrained Model
+
+↓
+
+4-bit Quantization
+
+↓
+
+Frozen
+
+↓
+
+LoRA Layers
+
+↓
+
+Training
+
+↓
+
+Adapter
+```
+
+---
+
+# NF4 Quantization
+
+QLoRA
+
+introduced
+
+```
+NF4
+
+Normal Float 4
+```
+
+Instead of
+
+ordinary INT4,
+
+NF4
+
+is designed
+
+specifically
+
+for neural network
+
+weights.
+
+Advantages
+
+✅ Better Accuracy
+
+✅ Better Compression
+
+Used in
+
+almost all
+
+QLoRA training.
+
+---
+
+# Double Quantization
+
+Another innovation
+
+in QLoRA.
+
+Instead of
+
+only quantizing
+
+the weights,
+
+the quantization constants
+
+are also compressed.
+
+Benefits
+
+- Saves additional memory
+- Minimal accuracy loss
+
+---
+
+# BitsAndBytes
+
+QLoRA
+
+uses
+
+```
+bitsandbytes
+```
+
+for loading
+
+4-bit models.
+
+Install
+
+```bash
+pip install bitsandbytes
+```
+
+---
+
+# BitsAndBytesConfig
+
+```python
+from transformers import BitsAndBytesConfig
+
+bnb_config = BitsAndBytesConfig(
+
+    load_in_4bit=True,
+
+    bnb_4bit_quant_type="nf4",
+
+    bnb_4bit_use_double_quant=True,
+
+    bnb_4bit_compute_dtype="bfloat16"
+
+)
+```
+
+---
+
+# Parameter Explanation
+
+| Parameter | Meaning |
+|------------|----------|
+| load_in_4bit | Load model in 4-bit |
+| quant_type | NF4 Quantization |
+| double_quant | Extra Compression |
+| compute_dtype | Computation Precision |
+
+---
+
+# Loading a Quantized Model
+
+```python
+from transformers import AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "meta-llama/Llama-3.2-1B",
+
+    quantization_config=bnb_config,
+
+    device_map="auto"
+
+)
+```
+
+Now
+
+the model
+
+is loaded
+
+in
+
+4-bit.
+
+---
+
+# Add LoRA
+
+```python
+from peft import get_peft_model
+
+model = get_peft_model(
+
+    model,
+
+    lora_config
+
+)
+```
+
+The base model
+
+stays frozen.
+
+Only
+
+LoRA
+
+learns.
+
+---
+
+# Training Pipeline
+
+```
+Load Quantized Model
+
+↓
+
+Apply LoRA
+
+↓
+
+Tokenizer
+
+↓
+
+Dataset
+
+↓
+
+Trainer
+
+↓
+
+Training
+
+↓
+
+Save Adapter
+```
+
+---
+
+# Saving Adapter
+
+```python
+model.save_pretrained(
+
+    "./qlora_adapter"
+
+)
+```
+
+Notice
+
+only
+
+the adapter
+
+is saved.
+
+Not
+
+the complete model.
+
+---
+
+# Complete Example
+
+```python
+from transformers import (
+    AutoModelForCausalLM,
+    BitsAndBytesConfig
+)
+
+bnb_config = BitsAndBytesConfig(
+
+    load_in_4bit=True,
+
+    bnb_4bit_quant_type="nf4",
+
+    bnb_4bit_use_double_quant=True,
+
+    bnb_4bit_compute_dtype="bfloat16"
+
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "meta-llama/Llama-3.2-1B",
+
+    quantization_config=bnb_config,
+
+    device_map="auto"
+
+)
+```
+
+---
+
+# QLoRA vs LoRA
+
+| Feature | LoRA | QLoRA |
+|----------|------|--------|
+| Base Model | FP16/BF16 | 4-bit |
+| Memory Usage | Higher | Lower |
+| Adapter Training | ✅ | ✅ |
+| Consumer GPU Friendly | Good | Excellent |
+
+---
+
+# QLoRA vs Full Fine-Tuning
+
+| Feature | Full FT | QLoRA |
+|----------|----------|--------|
+| GPU Memory | Very High | Very Low |
+| Speed | Slower | Faster |
+| Storage | Huge | Small |
+| Cost | Expensive | Affordable |
+
+---
+
+# Industry Workflow
+
+```
+Download Llama
+
+↓
+
+Load 4-bit
+
+↓
+
+LoRA
+
+↓
+
+Dataset
+
+↓
+
+Fine-Tune
+
+↓
+
+Upload Adapter
+```
+
+This is
+
+how
+
+many developers
+
+fine-tune
+
+modern LLMs.
+
+---
+
+# Best Practices
+
+✅ Use
+
+```
+NF4
+```
+
+for
+
+4-bit models.
+
+---
+
+✅ Enable
+
+Double Quantization.
+
+---
+
+✅ Use
+
+BF16
+
+when
+
+supported
+
+by your GPU.
+
+---
+
+✅ Keep
+
+the base model
+
+frozen.
+
+---
+
+# Common Mistakes
+
+❌ Trying
+
+to train
+
+all
+
+4-bit weights.
+
+---
+
+❌ Forgetting
+
+device_map="auto".
+
+---
+
+❌ Using
+
+the wrong
+
+quantization configuration.
+
+---
+
+# Cheat Sheet
+
+| Component | Purpose |
+|------------|----------|
+| QLoRA | Quantized LoRA |
+| NF4 | 4-bit Format |
+| BitsAndBytes | Quantization Library |
+| Double Quant | Extra Compression |
+| LoRA | Train Small Adapters |
+
+---
+
+# 🤖 How Modern AI Uses QLoRA
+
+```
+Llama-3
+
+↓
+
+4-bit
+
+↓
+
+LoRA
+
+↓
+
+Medical Dataset
+
+↓
+
+Medical Chatbot
+
+------------------
+
+Qwen
+
+↓
+
+4-bit
+
+↓
+
+LoRA
+
+↓
+
+Coding Dataset
+
+↓
+
+Code Assistant
+```
+
+This approach
+
+enables
+
+fine-tuning
+
+of large models
+
+without
+
+high-end multi-GPU systems.
+
+---
+
+# Summary
+
+- QLoRA combines 4-bit quantization with LoRA.
+- Quantization reduces memory usage by storing weights with fewer bits.
+- NF4 is the preferred 4-bit format introduced with QLoRA.
+- Double Quantization provides additional memory savings.
+- Only the LoRA adapters are trained; the quantized base model remains frozen.
+- QLoRA enables efficient fine-tuning of large LLMs on consumer hardware.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is QLoRA?
+2. Why is LoRA alone not enough for very large models?
+3. What is quantization?
+4. What is NF4?
+5. Why does QLoRA use Double Quantization?
+6. Why are computations performed in BF16/FP16 instead of INT4?
+7. What is `BitsAndBytesConfig`?
+8. Why is the base model frozen?
+9. Difference between LoRA and QLoRA?
+10. Why has QLoRA become so popular?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Install:
+
+- bitsandbytes
+- transformers
+- peft
+
+---
+
+### Exercise 2
+
+Create a `BitsAndBytesConfig` using NF4.
+
+---
+
+### Exercise 3
+
+Load a small model in 4-bit mode.
+
+---
+
+### Exercise 4
+
+Apply LoRA to the quantized model.
+
+---
+
+### Exercise 5
+
+Print the trainable parameter count and verify that only the LoRA adapters are trainable.
+
+---
+
+
+
+# Module 24 – BitsAndBytes (Complete Guide)
+
+> **Goal**
+>
+> Learn the BitsAndBytes library from scratch, understand how 8-bit and 4-bit quantization work, optimize GPU memory, and prepare for high-performance fine-tuning with Unsloth.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why BitsAndBytes?
+- What is Quantization?
+- Why Quantization?
+- FP32 vs FP16 vs BF16 vs INT8 vs INT4
+- 8-bit Quantization
+- 4-bit Quantization
+- FP4 vs NF4
+- Compute Dtype
+- BitsAndBytesConfig
+- Memory Optimization
+- 8-bit Optimizers
+- Practical Examples
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you have
+
+a photo
+
+stored as
+
+```
+100 MB
+```
+
+You compress it
+
+to
+
+```
+15 MB
+```
+
+The picture
+
+still looks
+
+almost identical.
+
+Only
+
+the storage
+
+becomes smaller.
+
+BitsAndBytes
+
+does exactly this
+
+for
+
+AI models.
+
+Instead of
+
+compressing images,
+
+it compresses
+
+model weights.
+
+---
+
+# What is BitsAndBytes?
+
+BitsAndBytes
+
+is a Python library
+
+used to
+
+```
+Load Models
+
+↓
+
+Compress Weights
+
+↓
+
+Reduce GPU Memory
+
+↓
+
+Speed Up Inference
+
+↓
+
+Enable QLoRA
+```
+
+Almost every
+
+modern
+
+LLM fine-tuning
+
+project
+
+uses it.
+
+---
+
+# Installation
+
+```bash
+pip install bitsandbytes
+```
+
+---
+
+# Why BitsAndBytes?
+
+Without Quantization
+
+```
+Llama-7B
+
+↓
+
+FP16
+
+↓
+
+14 GB
+```
+
+With
+
+BitsAndBytes
+
+```
+Llama-7B
+
+↓
+
+INT4
+
+↓
+
+≈3.5 GB
+```
+
+Much easier
+
+to run
+
+on consumer GPUs.
+
+---
+
+# Floating Point Formats
+
+| Format | Bits |
+|----------|------|
+| FP32 | 32 |
+| FP16 | 16 |
+| BF16 | 16 |
+| INT8 | 8 |
+| INT4 | 4 |
+
+Lower bits
+
+↓
+
+Lower memory
+
+↓
+
+Lower bandwidth
+
+---
+
+# FP32
+
+Most accurate.
+
+Used during
+
+training
+
+and scientific computing.
+
+Memory
+
+```
+Highest
+```
+
+---
+
+# FP16
+
+Half Precision.
+
+Uses
+
+half
+
+the memory
+
+of FP32.
+
+Widely used
+
+for
+
+deep learning.
+
+---
+
+# BF16 (Brain Floating Point)
+
+Developed
+
+for
+
+deep learning.
+
+Advantages
+
+✅ Similar memory to FP16
+
+✅ Larger exponent range
+
+✅ Better numerical stability for training
+
+Many recent NVIDIA GPUs
+
+and TPUs
+
+support BF16.
+
+---
+
+# INT8 Quantization
+
+Stores
+
+weights
+
+using
+
+8 bits.
+
+Advantages
+
+- Smaller Model
+- Faster Inference
+- Lower Memory
+
+Useful
+
+for
+
+inference
+
+and some training workflows.
+
+---
+
+# INT4 Quantization
+
+Stores
+
+weights
+
+using
+
+only
+
+4 bits.
+
+Advantages
+
+- Extremely Small Models
+- Consumer GPU Friendly
+
+Used
+
+by
+
+QLoRA.
+
+---
+
+# FP4 vs NF4
+
+BitsAndBytes
+
+supports
+
+multiple
+
+4-bit formats.
+
+---
+
+## FP4
+
+Standard
+
+4-bit floating-point representation.
+
+General purpose.
+
+---
+
+## NF4
+
+Normal Float 4
+
+Designed
+
+specifically
+
+for
+
+neural network
+
+weights.
+
+Advantages
+
+✅ Better Accuracy
+
+✅ Better Distribution
+
+Preferred
+
+for
+
+QLoRA.
+
+---
+
+# Comparison
+
+| Format | Recommended Use |
+|----------|----------------|
+| FP32 | Training |
+| FP16 | Mixed Precision Training |
+| BF16 | Stable Mixed Precision Training |
+| INT8 | Efficient Inference |
+| INT4 | QLoRA |
+| NF4 | Preferred 4-bit LLM Fine-Tuning |
+
+---
+
+# BitsAndBytesConfig
+
+Main configuration
+
+class.
+
+```python
+from transformers import BitsAndBytesConfig
+
+config = BitsAndBytesConfig(
+
+    load_in_4bit=True,
+
+    bnb_4bit_quant_type="nf4",
+
+    bnb_4bit_use_double_quant=True,
+
+    bnb_4bit_compute_dtype="bfloat16"
+
+)
+```
+
+---
+
+# Parameter Explanation
+
+### load_in_4bit
+
+```python
+load_in_4bit=True
+```
+
+Loads
+
+weights
+
+in
+
+4-bit.
+
+---
+
+### load_in_8bit
+
+```python
+load_in_8bit=True
+```
+
+Loads
+
+weights
+
+in
+
+8-bit.
+
+---
+
+### bnb_4bit_quant_type
+
+```python
+bnb_4bit_quant_type="nf4"
+```
+
+Choose
+
+```
+FP4
+
+or
+
+NF4
+```
+
+Recommendation
+
+```
+NF4
+```
+
+---
+
+### Double Quantization
+
+```python
+bnb_4bit_use_double_quant=True
+```
+
+Further
+
+compresses
+
+quantization statistics.
+
+Lower memory
+
+Minimal accuracy loss.
+
+---
+
+### Compute Dtype
+
+```python
+bnb_4bit_compute_dtype=torch.bfloat16
+```
+
+Important
+
+The model
+
+is stored
+
+in
+
+INT4,
+
+but
+
+computations
+
+are performed
+
+using
+
+BF16.
+
+---
+
+# Complete Example
+
+```python
+import torch
+
+from transformers import (
+
+    AutoModelForCausalLM,
+
+    BitsAndBytesConfig
+
+)
+
+config = BitsAndBytesConfig(
+
+    load_in_4bit=True,
+
+    bnb_4bit_quant_type="nf4",
+
+    bnb_4bit_use_double_quant=True,
+
+    bnb_4bit_compute_dtype=torch.bfloat16
+
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+
+    "meta-llama/Llama-3.2-1B",
+
+    quantization_config=config,
+
+    device_map="auto"
+
+)
+```
+
+---
+
+# Memory Optimization
+
+Without
+
+BitsAndBytes
+
+```
+FP16
+
+↓
+
+14 GB
+```
+
+With
+
+4-bit
+
+```
+↓
+
+≈3.5 GB
+```
+
+Approximate values
+
+vary by
+
+model architecture
+
+and implementation,
+
+but
+
+the reduction
+
+is substantial.
+
+---
+
+# 8-bit Optimizers
+
+BitsAndBytes
+
+also provides
+
+memory-efficient
+
+optimizers.
+
+Example
+
+```python
+import bitsandbytes as bnb
+
+optimizer = bnb.optim.Adam8bit(
+
+    model.parameters(),
+
+    lr=2e-4
+
+)
+```
+
+Advantages
+
+- Lower Optimizer Memory
+- Faster Training
+- Large Models
+
+---
+
+# Training Pipeline
+
+```
+Load Model
+
+↓
+
+Quantization
+
+↓
+
+LoRA
+
+↓
+
+Dataset
+
+↓
+
+Trainer
+
+↓
+
+Training
+```
+
+---
+
+# Inference Pipeline
+
+```
+Prompt
+
+↓
+
+Tokenizer
+
+↓
+
+Quantized Model
+
+↓
+
+Prediction
+```
+
+---
+
+# BitsAndBytes + PEFT
+
+```
+Base Model
+
+↓
+
+4-bit
+
+↓
+
+LoRA
+
+↓
+
+Training
+
+↓
+
+Adapter
+```
+
+This is
+
+the foundation
+
+of
+
+QLoRA.
+
+---
+
+# Real World Usage
+
+BitsAndBytes
+
+is commonly used
+
+with
+
+- Llama
+- Gemma
+- Qwen
+- Mistral
+- Phi
+- Falcon
+
+for
+
+both
+
+inference
+
+and
+
+fine-tuning.
+
+---
+
+# Best Practices
+
+✅ Use
+
+```
+NF4
+```
+
+for
+
+QLoRA.
+
+---
+
+✅ Prefer
+
+BF16
+
+if
+
+your hardware
+
+supports it.
+
+---
+
+✅ Enable
+
+Double Quantization
+
+for
+
+additional memory savings.
+
+---
+
+✅ Combine
+
+BitsAndBytes
+
+with
+
+LoRA.
+
+---
+
+# Common Mistakes
+
+❌ Mixing
+
+4-bit
+
+and
+
+8-bit
+
+configuration options.
+
+---
+
+❌ Assuming
+
+INT4
+
+is used
+
+for
+
+all computations.
+
+---
+
+❌ Forgetting
+
+to install
+
+BitsAndBytes
+
+before
+
+loading
+
+quantized models.
+
+---
+
+# Cheat Sheet
+
+| Option | Purpose |
+|----------|----------|
+| load_in_4bit | 4-bit Loading |
+| load_in_8bit | 8-bit Loading |
+| NF4 | Best 4-bit Format |
+| Double Quant | Extra Compression |
+| BF16 | Compute Precision |
+| Adam8bit | Memory Efficient Optimizer |
+
+---
+
+# 🤖 How Modern LLM Fine-Tuning Works
+
+```
+Llama
+
+↓
+
+BitsAndBytes
+
+↓
+
+INT4
+
+↓
+
+LoRA
+
+↓
+
+Dataset
+
+↓
+
+Training
+
+↓
+
+Adapter
+```
+
+Nearly every
+
+consumer GPU
+
+fine-tuning pipeline
+
+follows
+
+this pattern.
+
+---
+
+# Summary
+
+- BitsAndBytes enables efficient model quantization.
+- It supports 8-bit and 4-bit loading for Transformer models.
+- NF4 is the preferred 4-bit format for QLoRA.
+- Computation is typically performed in BF16 or FP16 while weights remain quantized.
+- The library also provides memory-efficient optimizers such as `Adam8bit`.
+- BitsAndBytes is a core dependency for practical large-model fine-tuning.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is BitsAndBytes?
+2. Why do we use quantization?
+3. Difference between FP16 and BF16?
+4. Difference between FP4 and NF4?
+5. Why is NF4 preferred?
+6. What is Double Quantization?
+7. What is `BitsAndBytesConfig`?
+8. Why is computation performed in BF16 instead of INT4?
+9. What is `Adam8bit`?
+10. How does BitsAndBytes enable QLoRA?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Install the `bitsandbytes` library and verify the installation.
+
+---
+
+### Exercise 2
+
+Create both a 4-bit and an 8-bit `BitsAndBytesConfig`.
+
+---
+
+### Exercise 3
+
+Load the same model once in FP16 and once in 4-bit mode. Compare the reported GPU memory usage.
+
+---
+
+### Exercise 4
+
+Experiment with `bnb_4bit_quant_type="fp4"` and `"nf4"` and read the documentation describing the differences.
+
+---
+
+### Exercise 5
+
+Replace the standard Adam optimizer with `Adam8bit` in a small training script.
+
+---
