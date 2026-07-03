@@ -19874,3 +19874,1933 @@ of these blocks.
 10. What happens if you double the number of heads while keeping the embedding size fixed?
 
 ---
+
+
+
+
+# Module 16 – Attention Mechanism
+
+# Part 5 – Positional Encoding (How Transformers Understand Word Order)
+
+> **Goal**
+>
+> Learn why Transformers cannot understand word order on their own, how Positional Encoding solves this problem, and explore modern techniques like RoPE used in Llama and other LLMs.
+
+---
+
+# 📚 Table of Contents
+
+- Why Position Matters
+- Why Attention Doesn't Know Order
+- What is Positional Encoding?
+- Sinusoidal Positional Encoding
+- Learned Positional Embeddings
+- Rotary Positional Embeddings (RoPE)
+- ALiBi
+- Comparison
+- PyTorch Implementation
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine I give you this sentence.
+
+```
+I love AI
+```
+
+Now imagine I shuffle it.
+
+```
+AI love I
+```
+
+Both sentences contain
+
+the same words.
+
+But
+
+their meanings
+
+are different.
+
+Humans understand
+
+because
+
+we know
+
+the position
+
+of every word.
+
+A Transformer
+
+doesn't.
+
+Without positional information,
+
+it simply sees
+
+```
+I
+
+Love
+
+AI
+```
+
+as
+
+three vectors.
+
+It has
+
+no idea
+
+which word came first.
+
+---
+
+# Why Doesn't Attention Know Order?
+
+Attention
+
+compares
+
+every word
+
+with every other word.
+
+It doesn't know
+
+whether
+
+```
+Dog
+
+↓
+
+before
+
+↓
+
+Runs
+```
+
+or
+
+```
+Runs
+
+↓
+
+before
+
+↓
+
+Dog
+```
+
+Without extra information,
+
+both look similar.
+
+---
+
+# The Problem
+
+Sentence 1
+
+```
+Dog bites man.
+```
+
+Sentence 2
+
+```
+Man bites dog.
+```
+
+Same words.
+
+Different order.
+
+Different meaning.
+
+Attention alone
+
+cannot distinguish
+
+between them.
+
+---
+
+# Solution
+
+Add
+
+position information
+
+to every word.
+
+```
+Word Embedding
+
++
+
+Position Encoding
+
+↓
+
+Final Embedding
+```
+
+Now
+
+the model knows
+
+both
+
+```
+Meaning
+
++
+
+Position
+```
+
+---
+
+# Visual Representation
+
+```
+Token
+
+↓
+
+Embedding
+
++
+
+Position
+
+↓
+
+Transformer
+```
+
+---
+
+# Sinusoidal Positional Encoding
+
+The original Transformer paper
+
+introduced
+
+fixed
+
+Sinusoidal Encoding.
+
+Instead of learning
+
+positions,
+
+they are computed
+
+using
+
+```
+Sine
+
+and
+
+Cosine
+```
+
+functions.
+
+Formula
+
+\[
+PE(pos,2i)=\sin\left(\frac{pos}{10000^{2i/d}}\right)
+\]
+
+\[
+PE(pos,2i+1)=\cos\left(\frac{pos}{10000^{2i/d}}\right)
+\]
+
+Don't worry
+
+about memorizing
+
+the formula.
+
+The important idea is
+
+```
+Different Positions
+
+↓
+
+Different Patterns
+```
+
+---
+
+# Why Sine and Cosine?
+
+Because
+
+they create
+
+smooth
+
+continuous
+
+patterns.
+
+Nearby positions
+
+have similar encodings,
+
+while distant positions
+
+look different.
+
+This helps the model
+
+understand
+
+relative positions.
+
+---
+
+# Example
+
+Suppose
+
+Embedding Size
+
+```
+4
+```
+
+Position
+
+```
+0
+
+↓
+
+[0,1,0,1]
+```
+
+Position
+
+```
+1
+
+↓
+
+[0.84,0.54,0.01,0.99]
+```
+
+Position
+
+```
+2
+
+↓
+
+Different Values
+```
+
+Each position
+
+gets
+
+a unique pattern.
+
+---
+
+# Adding Position
+
+Suppose
+
+Embedding
+
+```
+[0.2
+
+0.7
+
+0.1
+
+0.5]
+```
+
+Position Encoding
+
+```
+[0.8
+
+0.3
+
+0.2
+
+0.4]
+```
+
+Final Input
+
+```
+[1.0
+
+1.0
+
+0.3
+
+0.9]
+```
+
+This
+
+combined vector
+
+is sent
+
+to the Transformer.
+
+---
+
+# Learned Positional Embeddings
+
+Instead of
+
+using
+
+fixed formulas,
+
+the model
+
+learns
+
+position vectors.
+
+```
+Position
+
+↓
+
+Embedding Table
+
+↓
+
+Learned Position
+```
+
+Advantages
+
+- More Flexible
+- Learns Task-Specific Positions
+
+Used in
+
+- BERT
+- GPT-2 (absolute learned position embeddings)
+
+---
+
+# Rotary Positional Embedding (RoPE)
+
+Modern LLMs
+
+rarely use
+
+the original sinusoidal method.
+
+Instead
+
+they use
+
+```
+RoPE
+```
+
+RoPE
+
+rotates
+
+Query
+
+and
+
+Key
+
+vectors
+
+based on position.
+
+Instead of adding
+
+position,
+
+it modifies
+
+the attention computation itself.
+
+---
+
+# Why RoPE?
+
+Advantages
+
+✅ Better Long Context
+
+✅ Better Generalization
+
+✅ Relative Position Awareness
+
+Used in
+
+- Llama
+- Qwen
+- DeepSeek
+- Gemma
+- Mistral
+
+---
+
+# ALiBi
+
+Another modern method.
+
+Instead of
+
+adding embeddings,
+
+ALiBi
+
+adds
+
+a distance-based bias
+
+to attention scores.
+
+Advantages
+
+- Better Long Sequences
+- No Extra Position Embeddings
+- Simple Implementation
+
+---
+
+# Comparison
+
+| Method | Learnable | Used In |
+|---------|-----------|----------|
+| Sinusoidal | ❌ | Original Transformer |
+| Learned Position | ✅ | BERT, GPT-2 |
+| RoPE | Partial (rotational transformation with fixed frequencies) | Llama, Qwen, Gemma, DeepSeek |
+| ALiBi | ❌ | Some Long-Context Models |
+
+---
+
+# PyTorch Example
+
+Learned Positional Embedding
+
+```python
+import torch
+import torch.nn as nn
+
+max_length = 512
+
+embedding_dim = 768
+
+position_embedding = nn.Embedding(
+
+    max_length,
+
+    embedding_dim
+
+)
+
+positions = torch.arange(
+
+    0,
+
+    10
+
+)
+
+pos = position_embedding(
+
+    positions
+
+)
+
+print(pos.shape)
+```
+
+Output
+
+```
+torch.Size([10,768])
+```
+
+---
+
+# Adding Position to Tokens
+
+```python
+token_embedding = torch.randn(
+
+10,
+
+768
+
+)
+
+final_embedding = (
+
+token_embedding
+
++
+
+pos
+
+)
+```
+
+Now
+
+every token
+
+contains
+
+```
+Meaning
+
++
+
+Position
+```
+
+---
+
+# Complete Pipeline
+
+```
+Sentence
+
+↓
+
+Tokenization
+
+↓
+
+Token Embeddings
+
+↓
+
+Positional Encoding
+
+↓
+
+Transformer Encoder
+
+↓
+
+Attention
+
+↓
+
+Output
+```
+
+---
+
+# Why GPT Needs Positional Encoding
+
+Sentence
+
+```
+The cat sat.
+```
+
+Without Position
+
+```
+The
+
+Cat
+
+Sat
+```
+
+and
+
+```
+Sat
+
+The
+
+Cat
+```
+
+would be difficult to distinguish.
+
+Position Encoding
+
+solves
+
+this problem.
+
+---
+
+# Relation with Attention
+
+Attention
+
+answers
+
+```
+Which word
+
+should I focus on?
+```
+
+Positional Encoding
+
+answers
+
+```
+Where is this word?
+```
+
+Together,
+
+they allow the model
+
+to understand
+
+both
+
+relationships
+
+and
+
+order.
+
+---
+
+# Best Practices
+
+✅ Always include positional information in Transformer inputs.
+
+✅ Choose a positional encoding method that matches your architecture.
+
+✅ RoPE is widely used in modern decoder-only LLMs.
+
+---
+
+# Common Mistakes
+
+❌ Assuming attention alone understands sequence order.
+
+❌ Confusing token embeddings with positional embeddings.
+
+❌ Assuming all Transformer models use the same positional encoding strategy.
+
+---
+
+# Cheat Sheet
+
+| Concept | Purpose |
+|----------|----------|
+| Token Embedding | Represents word meaning |
+| Positional Encoding | Represents word order |
+| Sinusoidal | Fixed Position Encoding |
+| Learned Position | Trainable Position Encoding |
+| RoPE | Rotates Q and K based on position |
+| ALiBi | Distance Bias |
+
+---
+
+# 🤖 Modern LLMs
+
+| Model | Position Method |
+|--------|-----------------|
+| Original Transformer | Sinusoidal |
+| BERT | Learned Position |
+| GPT-2 | Learned Position |
+| Llama | RoPE |
+| Gemma | RoPE |
+| Qwen | RoPE |
+| Mistral | RoPE |
+| DeepSeek | RoPE |
+
+---
+
+# Summary
+
+- Self-attention alone does not understand token order.
+- Positional Encoding injects sequence information into the model.
+- The original Transformer used fixed sinusoidal encodings.
+- Many modern models use learned positional embeddings or RoPE.
+- RoPE has become the standard choice for many decoder-only LLMs because it captures relative position information effectively.
+
+---
+
+# 🎤 Interview Questions
+
+1. Why do Transformers need Positional Encoding?
+2. Why can't Self-Attention understand word order by itself?
+3. What is the difference between Token Embeddings and Positional Embeddings?
+4. Why were Sine and Cosine used in the original Transformer?
+5. What is Learned Positional Encoding?
+6. What is RoPE?
+7. Why is RoPE used in Llama?
+8. What is ALiBi?
+9. Which positional encoding does BERT use?
+10. Which positional encoding does Llama use?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a learnable positional embedding using `nn.Embedding`.
+
+---
+
+### Exercise 2
+
+Add positional embeddings to random token embeddings.
+
+---
+
+### Exercise 3
+
+Research the difference between RoPE and ALiBi.
+
+---
+
+### Exercise 4
+
+Read the original Transformer paper section on positional encoding and summarize the key idea.
+
+---
+
+### Exercise 5
+
+Find which positional encoding method is used in:
+
+- GPT-2
+- BERT
+- Llama 3
+- Gemma
+- Qwen
+
+
+
+# Module 17 – Transformers (Complete Architecture)
+
+> **Goal**
+>
+> Build a complete understanding of the Transformer architecture proposed in the paper **"Attention Is All You Need" (2017)** and learn how modern LLMs like GPT, BERT, Llama, Gemma, and Qwen evolved from it.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Transformers?
+- Transformer Overview
+- Encoder
+- Decoder
+- Transformer Block
+- Residual Connection
+- Layer Normalization
+- Feed Forward Network (FFN)
+- Encoder-Only Models
+- Decoder-Only Models
+- Encoder-Decoder Models
+- Complete PyTorch Example
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine you're building a company.
+
+One employee cannot do everything.
+
+Instead,
+
+you divide the work.
+
+```
+Reception
+
+↓
+
+Manager
+
+↓
+
+Engineer
+
+↓
+
+Quality Check
+
+↓
+
+Delivery
+```
+
+Each person
+
+has
+
+a specific responsibility.
+
+Transformers work
+
+exactly
+
+the same way.
+
+Instead of
+
+one giant neural network,
+
+they use
+
+small specialized blocks.
+
+Each block
+
+improves
+
+the representation
+
+a little more.
+
+After
+
+dozens of blocks,
+
+the model
+
+understands
+
+the sentence.
+
+---
+
+# Before Transformers
+
+Old NLP Pipeline
+
+```
+Sentence
+
+↓
+
+RNN
+
+↓
+
+Prediction
+```
+
+Problems
+
+❌ Slow
+
+❌ Sequential
+
+❌ Forget Long Context
+
+---
+
+# Transformer Pipeline
+
+```
+Sentence
+
+↓
+
+Embedding
+
+↓
+
+Positional Encoding
+
+↓
+
+Transformer Blocks
+
+↓
+
+Prediction
+```
+
+Everything
+
+is processed
+
+in parallel.
+
+---
+
+# High Level Architecture
+
+```
+Input Sentence
+
+↓
+
+Tokenization
+
+↓
+
+Embedding
+
+↓
+
+Positional Encoding
+
+↓
+
+Transformer
+
+↓
+
+Output
+```
+
+---
+
+# Original Transformer
+
+The original paper
+
+contains
+
+two major parts.
+
+```
+Encoder
+
++
+
+Decoder
+```
+
+```
+Input
+
+↓
+
+Encoder
+
+↓
+
+Context
+
+↓
+
+Decoder
+
+↓
+
+Output Sentence
+```
+
+Used for
+
+Machine Translation.
+
+---
+
+# Encoder
+
+The Encoder
+
+reads
+
+the input sentence.
+
+Example
+
+```
+English
+
+↓
+
+Encoder
+
+↓
+
+Meaning
+```
+
+The Encoder
+
+doesn't generate words.
+
+It only
+
+understands
+
+the sentence.
+
+---
+
+# Decoder
+
+The Decoder
+
+uses
+
+Encoder Output
+
+to generate
+
+new words.
+
+Example
+
+```
+Meaning
+
+↓
+
+Decoder
+
+↓
+
+French Sentence
+```
+
+---
+
+# Transformer Block
+
+Every Transformer
+
+is built
+
+using
+
+the same block.
+
+```
+Input
+
+↓
+
+Multi-Head Attention
+
+↓
+
+Add & Norm
+
+↓
+
+Feed Forward Network
+
+↓
+
+Add & Norm
+
+↓
+
+Output
+```
+
+Modern LLMs
+
+stack
+
+many Transformer blocks.
+
+---
+
+# Residual Connection
+
+Suppose
+
+the Attention Layer
+
+doesn't improve
+
+the representation.
+
+Should we
+
+lose
+
+the original input?
+
+No.
+
+Instead,
+
+we add it back.
+
+Formula
+
+```
+Output
+
+=
+
+Input
+
++
+
+Layer Output
+```
+
+Called
+
+```
+Residual Connection
+```
+
+---
+
+# Why Residual Connections?
+
+Without Residuals
+
+Very deep networks
+
+become
+
+difficult
+
+to train.
+
+Residuals
+
+help
+
+gradients
+
+flow
+
+through
+
+many layers.
+
+---
+
+# Layer Normalization
+
+Different layers
+
+may produce
+
+very different values.
+
+LayerNorm
+
+keeps them
+
+stable.
+
+PyTorch
+
+```python
+layer_norm = nn.LayerNorm(512)
+```
+
+Advantages
+
+✅ Stable Training
+
+✅ Faster Convergence
+
+---
+
+# Feed Forward Network (FFN)
+
+After Attention,
+
+each token
+
+passes through
+
+a small neural network.
+
+```
+Linear
+
+↓
+
+ReLU / GELU
+
+↓
+
+Linear
+```
+
+PyTorch
+
+```python
+ffn = nn.Sequential(
+
+    nn.Linear(512,2048),
+
+    nn.GELU(),
+
+    nn.Linear(2048,512)
+
+)
+```
+
+Notice
+
+Every token
+
+passes
+
+through
+
+the same FFN.
+
+---
+
+# Complete Transformer Block
+
+```
+Input
+
+↓
+
+Multi-Head Attention
+
+↓
+
+Residual
+
+↓
+
+LayerNorm
+
+↓
+
+Feed Forward
+
+↓
+
+Residual
+
+↓
+
+LayerNorm
+
+↓
+
+Output
+```
+
+This
+
+single block
+
+is repeated
+
+many times.
+
+---
+
+# Encoder Block
+
+```
+Input
+
+↓
+
+Self Attention
+
+↓
+
+Add & Norm
+
+↓
+
+Feed Forward
+
+↓
+
+Add & Norm
+```
+
+---
+
+# Decoder Block
+
+The Decoder
+
+contains
+
+one extra layer.
+
+```
+Masked Self Attention
+
+↓
+
+Encoder-Decoder Attention
+
+↓
+
+Feed Forward
+```
+
+---
+
+# Why Masked Attention?
+
+Suppose
+
+GPT
+
+is predicting
+
+```
+word 5
+```
+
+Should it
+
+see
+
+```
+word 6
+```
+
+No.
+
+That would
+
+leak
+
+future information.
+
+Masked Attention
+
+hides
+
+future tokens.
+
+---
+
+# Encoder-Decoder Attention
+
+Decoder
+
+asks
+
+Encoder
+
+for information.
+
+```
+Decoder Query
+
+↓
+
+Encoder Keys
+
+↓
+
+Encoder Values
+```
+
+This is called
+
+```
+Cross Attention
+```
+
+---
+
+# Three Types of Transformers
+
+---
+
+## Encoder Only
+
+Example
+
+```
+BERT
+```
+
+Architecture
+
+```
+Input
+
+↓
+
+Encoder
+
+↓
+
+Output
+```
+
+Used For
+
+- Classification
+- Search
+- Embeddings
+- Sentiment Analysis
+
+---
+
+## Decoder Only
+
+Example
+
+```
+GPT
+
+Llama
+
+Gemma
+
+Qwen
+```
+
+Architecture
+
+```
+Input
+
+↓
+
+Decoder
+
+↓
+
+Next Token
+```
+
+Used For
+
+- Chatbots
+- Code Generation
+- Story Writing
+- LLMs
+
+---
+
+## Encoder-Decoder
+
+Example
+
+```
+T5
+
+BART
+```
+
+Architecture
+
+```
+Input
+
+↓
+
+Encoder
+
+↓
+
+Decoder
+
+↓
+
+Output
+```
+
+Used For
+
+- Translation
+- Summarization
+- Question Answering
+
+---
+
+# Comparison
+
+| Model | Architecture |
+|---------|--------------|
+| BERT | Encoder Only |
+| GPT | Decoder Only |
+| Llama | Decoder Only |
+| Gemma | Decoder Only |
+| Qwen | Decoder Only |
+| T5 | Encoder + Decoder |
+| BART | Encoder + Decoder |
+
+---
+
+# Complete Workflow
+
+```
+Sentence
+
+↓
+
+Tokenizer
+
+↓
+
+Embeddings
+
+↓
+
+Position
+
+↓
+
+Transformer Block × N
+
+↓
+
+Linear Layer
+
+↓
+
+Softmax
+
+↓
+
+Prediction
+```
+
+---
+
+# Mini Transformer Block in PyTorch
+
+```python
+import torch
+import torch.nn as nn
+
+class TransformerBlock(nn.Module):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.attention = nn.MultiheadAttention(
+
+            embed_dim=512,
+
+            num_heads=8,
+
+            batch_first=True
+
+        )
+
+        self.norm1 = nn.LayerNorm(512)
+
+        self.ffn = nn.Sequential(
+
+            nn.Linear(512,2048),
+
+            nn.GELU(),
+
+            nn.Linear(2048,512)
+
+        )
+
+        self.norm2 = nn.LayerNorm(512)
+
+    def forward(self,x):
+
+        attn_output,_ = self.attention(
+
+            x,
+
+            x,
+
+            x
+
+        )
+
+        x = self.norm1(
+
+            x + attn_output
+
+        )
+
+        ffn_output = self.ffn(x)
+
+        x = self.norm2(
+
+            x + ffn_output
+
+        )
+
+        return x
+```
+
+---
+
+# Testing the Block
+
+```python
+x = torch.randn(
+
+    2,
+
+    10,
+
+    512
+
+)
+
+model = TransformerBlock()
+
+output = model(x)
+
+print(output.shape)
+```
+
+Output
+
+```
+torch.Size([2,10,512])
+```
+
+---
+
+# Complete Visualization
+
+```
+Sentence
+
+↓
+
+Embedding
+
+↓
+
+Position
+
+↓
+
+Transformer Block
+
+↓
+
+Transformer Block
+
+↓
+
+Transformer Block
+
+↓
+
+Linear Layer
+
+↓
+
+Prediction
+```
+
+---
+
+# Real World Examples
+
+| Application | Model |
+|-------------|-------|
+| ChatGPT | GPT |
+| Claude | Decoder Transformer |
+| Gemini | Transformer-based |
+| Llama | Decoder Transformer |
+| DeepSeek | Decoder Transformer |
+| BERT Search | Encoder Transformer |
+| Google Translate | Encoder-Decoder |
+
+---
+
+# Best Practices
+
+✅ Use LayerNorm after residual connections.
+
+✅ Use GELU instead of ReLU in Transformer FFNs.
+
+✅ Stack multiple Transformer blocks.
+
+✅ Use masked attention for language generation.
+
+---
+
+# Common Mistakes
+
+❌ Confusing Encoder and Decoder.
+
+❌ Forgetting positional information.
+
+❌ Forgetting residual connections.
+
+❌ Thinking GPT uses an Encoder.
+
+---
+
+# Cheat Sheet
+
+| Component | Purpose |
+|------------|----------|
+| Embedding | Word Representation |
+| Position Encoding | Word Order |
+| Multi-Head Attention | Learn Relationships |
+| Residual | Preserve Information |
+| LayerNorm | Stable Training |
+| FFN | Feature Transformation |
+| Softmax | Prediction |
+
+---
+
+# 🤖 How Modern LLMs Differ
+
+The original Transformer
+
+used
+
+```
+Encoder
+
++
+
+Decoder
+```
+
+Modern LLMs
+
+usually keep
+
+only
+
+the Decoder.
+
+```
+GPT
+
+↓
+
+Decoder
+
+Only
+```
+
+```
+Llama
+
+↓
+
+Decoder
+
+Only
+```
+
+```
+Gemma
+
+↓
+
+Decoder
+
+Only
+```
+
+This makes
+
+next-token prediction
+
+efficient.
+
+---
+
+# Summary
+
+- Transformers replaced RNNs with attention-based architectures.
+- The original Transformer consists of an Encoder and a Decoder.
+- Residual connections and Layer Normalization enable stable deep networks.
+- Feed Forward Networks process each token independently after attention.
+- Modern LLMs such as GPT, Llama, Gemma, and Qwen are primarily decoder-only Transformers.
+- BERT is encoder-only, while T5 and BART use both encoder and decoder.
+
+---
+
+# 🎤 Interview Questions
+
+1. Why were Transformers introduced?
+2. What is the role of the Encoder?
+3. What is the role of the Decoder?
+4. Why are Residual Connections important?
+5. Why is LayerNorm used?
+6. What is the purpose of the Feed Forward Network?
+7. Difference between Self-Attention and Cross-Attention?
+8. Why does GPT use Masked Attention?
+9. Difference between BERT and GPT?
+10. Why are most modern LLMs decoder-only?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Implement a Transformer block using `nn.MultiheadAttention`.
+
+---
+
+### Exercise 2
+
+Replace ReLU with GELU in the FFN and compare outputs.
+
+---
+
+### Exercise 3
+
+Print the output shape of a Transformer block for different batch sizes and sequence lengths.
+
+---
+
+### Exercise 4
+
+Research the architectures of:
+
+- GPT-2
+- BERT
+- T5
+- Llama 3
+
+Identify whether they are encoder-only, decoder-only, or encoder-decoder.
+
+---
+
+### Exercise 5
+
+Draw the complete Transformer architecture from memory.
+
+---
