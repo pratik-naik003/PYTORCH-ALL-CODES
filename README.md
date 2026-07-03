@@ -28316,3 +28316,1918 @@ Experiment with `bnb_4bit_quant_type="fp4"` and `"nf4"` and read the documentati
 Replace the standard Adam optimizer with `Adam8bit` in a small training script.
 
 ---
+
+
+
+
+# Module 25 – Unsloth (Fast LLM Fine-Tuning)
+
+> **Goal**
+>
+> Learn Unsloth from scratch, understand why it is significantly faster than standard Hugging Face training, and fine-tune modern LLMs such as Llama, Gemma, Qwen, and Mistral using a production-ready pipeline.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is Unsloth?
+- Why Unsloth?
+- How Unsloth Works
+- Installation
+- FastLanguageModel
+- Loading Models
+- Applying LoRA
+- Preparing Tokenizer
+- Training Pipeline
+- Saving Models
+- GGUF Export
+- Inference
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine two students.
+
+Both
+
+study
+
+the same book.
+
+Student A
+
+takes
+
+```
+10 Hours
+```
+
+Student B
+
+uses
+
+better notes,
+
+better shortcuts,
+
+and
+
+finishes in
+
+```
+3 Hours
+```
+
+Both
+
+learn
+
+the same topics.
+
+Difference?
+
+Efficiency.
+
+Unsloth
+
+does exactly
+
+the same thing.
+
+It doesn't change
+
+the model.
+
+It changes
+
+how efficiently
+
+the model is trained.
+
+---
+
+# What is Unsloth?
+
+Unsloth
+
+is an open-source library
+
+that accelerates
+
+LLM fine-tuning.
+
+It provides
+
+- Faster Training
+- Lower GPU Memory Usage
+- Easy LoRA Setup
+- QLoRA Support
+- Hugging Face Compatibility
+
+---
+
+# Why Use Unsloth?
+
+Without Unsloth
+
+```
+Transformers
+
+↓
+
+PEFT
+
+↓
+
+TRL
+
+↓
+
+Long Training
+```
+
+With Unsloth
+
+```
+Unsloth
+
+↓
+
+Optimized Kernels
+
+↓
+
+Lower Memory
+
+↓
+
+Faster Training
+```
+
+Benefits
+
+✅ Faster
+
+✅ Less VRAM
+
+✅ Simple API
+
+---
+
+# Supported Models
+
+Unsloth supports many popular models, including:
+
+- Llama
+- Gemma
+- Qwen
+- Mistral
+- Phi
+- TinyLlama
+
+Support expands as new model architectures are added.
+
+---
+
+# Installation
+
+```bash
+pip install unsloth
+pip install transformers
+pip install datasets
+pip install trl
+pip install peft
+pip install bitsandbytes
+pip install accelerate
+```
+
+---
+
+# Import
+
+```python
+from unsloth import FastLanguageModel
+```
+
+This is
+
+the main class
+
+used
+
+throughout
+
+Unsloth.
+
+---
+
+# Loading a Model
+
+```python
+from unsloth import FastLanguageModel
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+
+    model_name = "unsloth/Llama-3.2-3B",
+
+    max_seq_length = 2048,
+
+    load_in_4bit = True,
+
+)
+```
+
+Notice
+
+```
+4-bit
+
+↓
+
+Automatic
+```
+
+No need
+
+to manually create
+
+a
+
+`BitsAndBytesConfig`
+
+for common workflows.
+
+---
+
+# Understanding Parameters
+
+| Parameter | Purpose |
+|-----------|----------|
+| model_name | Base Model |
+| max_seq_length | Maximum Context Length |
+| load_in_4bit | Enable QLoRA |
+| dtype | Precision (optional) |
+
+---
+
+# Applying LoRA
+
+```python
+model = FastLanguageModel.get_peft_model(
+
+    model,
+
+    r = 16,
+
+    target_modules = [
+
+        "q_proj",
+
+        "k_proj",
+
+        "v_proj",
+
+        "o_proj",
+
+        "gate_proj",
+
+        "up_proj",
+
+        "down_proj",
+
+    ],
+
+    lora_alpha = 16,
+
+    lora_dropout = 0,
+
+    bias = "none",
+
+)
+```
+
+Done.
+
+LoRA
+
+is attached
+
+to
+
+the model.
+
+---
+
+# Why These Target Modules?
+
+```
+q_proj
+
+↓
+
+Attention Queries
+
+----------------
+
+k_proj
+
+↓
+
+Attention Keys
+
+----------------
+
+v_proj
+
+↓
+
+Attention Values
+
+----------------
+
+o_proj
+
+↓
+
+Attention Output
+
+----------------
+
+gate_proj
+
+↓
+
+Feed Forward
+
+----------------
+
+up_proj
+
+↓
+
+Feed Forward
+
+----------------
+
+down_proj
+
+↓
+
+Feed Forward
+```
+
+These layers
+
+are
+
+commonly adapted
+
+during LoRA fine-tuning.
+
+---
+
+# Preparing the Dataset
+
+Suppose
+
+we have
+
+```
+Question
+
+↓
+
+Answer
+```
+
+Example
+
+```python
+dataset = [
+
+{
+
+"instruction":"What is AI?",
+
+"output":"Artificial Intelligence..."
+
+}
+
+]
+```
+
+Later,
+
+we'll convert
+
+this
+
+into
+
+chat format.
+
+---
+
+# Tokenization
+
+```python
+text = tokenizer(
+
+    "Hello",
+
+    return_tensors="pt"
+
+)
+```
+
+Exactly
+
+like
+
+Hugging Face.
+
+---
+
+# Training with TRL
+
+```python
+from trl import SFTTrainer
+from transformers import TrainingArguments
+
+trainer = SFTTrainer(
+
+    model = model,
+
+    tokenizer = tokenizer,
+
+    train_dataset = dataset,
+
+    args = TrainingArguments(
+
+        output_dir = "outputs",
+
+        per_device_train_batch_size = 2,
+
+        gradient_accumulation_steps = 4,
+
+        learning_rate = 2e-4,
+
+        num_train_epochs = 1,
+
+        logging_steps = 10,
+
+    ),
+
+)
+```
+
+Start training
+
+```python
+trainer.train()
+```
+
+---
+
+# Complete Workflow
+
+```
+Load Model
+
+↓
+
+Apply LoRA
+
+↓
+
+Load Dataset
+
+↓
+
+Tokenize
+
+↓
+
+Trainer
+
+↓
+
+Training
+
+↓
+
+Save Adapter
+```
+
+---
+
+# Saving LoRA
+
+```python
+model.save_pretrained(
+
+    "lora_model"
+
+)
+
+tokenizer.save_pretrained(
+
+    "lora_model"
+
+)
+```
+
+---
+
+# Loading LoRA
+
+```python
+model, tokenizer = FastLanguageModel.from_pretrained(
+
+    model_name = "lora_model",
+
+    max_seq_length = 2048,
+
+)
+```
+
+---
+
+# Enable Fast Inference
+
+```python
+FastLanguageModel.for_inference(
+
+    model
+
+)
+```
+
+This switches
+
+the model
+
+to
+
+optimized inference mode.
+
+---
+
+# Generate Text
+
+```python
+inputs = tokenizer(
+
+    "Explain Machine Learning.",
+
+    return_tensors = "pt"
+
+).to("cuda")
+
+outputs = model.generate(
+
+    **inputs,
+
+    max_new_tokens = 100
+
+)
+
+print(
+
+tokenizer.decode(
+
+outputs[0],
+
+skip_special_tokens = True
+
+)
+
+)
+```
+
+---
+
+# Saving GGUF
+
+Need
+
+to run
+
+the model
+
+inside
+
+```
+Ollama
+
+LM Studio
+
+llama.cpp
+```
+
+Export
+
+to
+
+GGUF.
+
+```python
+model.save_pretrained_gguf(
+
+    "gguf_model"
+
+)
+```
+
+GGUF
+
+is
+
+a popular format
+
+for local inference with tools such as `llama.cpp`.
+
+---
+
+# Hugging Face Upload
+
+```python
+model.push_to_hub(
+
+    "username/my_model"
+
+)
+
+tokenizer.push_to_hub(
+
+    "username/my_model"
+
+)
+```
+
+---
+
+# Complete Pipeline
+
+```
+Download Model
+
+↓
+
+4-bit Loading
+
+↓
+
+LoRA
+
+↓
+
+Dataset
+
+↓
+
+Training
+
+↓
+
+Save
+
+↓
+
+GGUF
+
+↓
+
+Inference
+```
+
+---
+
+# Unsloth vs Standard Hugging Face
+
+| Feature | Hugging Face | Unsloth |
+|----------|--------------|----------|
+| Setup | More Manual | Simpler |
+| Speed | Standard | Faster |
+| VRAM Usage | Higher | Lower |
+| QLoRA | Manual Setup | Built-in Convenience |
+| Beginner Friendly | Good | Excellent |
+
+---
+
+# Real Industry Workflow
+
+```
+Llama-3
+
+↓
+
+Unsloth
+
+↓
+
+QLoRA
+
+↓
+
+Custom Dataset
+
+↓
+
+Training
+
+↓
+
+GGUF
+
+↓
+
+Ollama
+
+↓
+
+Chatbot
+```
+
+This is
+
+a common workflow
+
+used
+
+for
+
+local AI applications.
+
+---
+
+# Best Practices
+
+✅ Use
+
+```
+load_in_4bit=True
+```
+
+for
+
+consumer GPUs.
+
+---
+
+✅ Start
+
+with
+
+```
+r = 16
+```
+
+for LoRA.
+
+---
+
+✅ Save
+
+both
+
+model
+
+and
+
+tokenizer.
+
+---
+
+✅ Test
+
+the model
+
+before
+
+exporting
+
+to GGUF.
+
+---
+
+# Common Mistakes
+
+❌ Forgetting
+
+to save
+
+the tokenizer.
+
+---
+
+❌ Using
+
+an unsupported
+
+base model version.
+
+---
+
+❌ Training
+
+with
+
+a poorly formatted dataset.
+
+---
+
+❌ Forgetting
+
+to switch
+
+to
+
+inference mode
+
+after training.
+
+---
+
+# Cheat Sheet
+
+| Function | Purpose |
+|----------|----------|
+| `from_pretrained()` | Load Model |
+| `get_peft_model()` | Apply LoRA |
+| `for_inference()` | Fast Inference |
+| `trainer.train()` | Start Training |
+| `save_pretrained()` | Save Adapter |
+| `save_pretrained_gguf()` | Export GGUF |
+
+---
+
+# 🤖 Complete Fine-Tuning Pipeline
+
+```
+Base Model
+
+↓
+
+4-bit Loading
+
+↓
+
+LoRA
+
+↓
+
+Dataset
+
+↓
+
+SFTTrainer
+
+↓
+
+Training
+
+↓
+
+Adapter
+
+↓
+
+GGUF
+
+↓
+
+Ollama / LM Studio / llama.cpp
+```
+
+---
+
+# Summary
+
+- Unsloth simplifies and accelerates LoRA/QLoRA fine-tuning.
+- It integrates well with the Hugging Face ecosystem.
+- `FastLanguageModel` provides optimized model loading and inference.
+- Training is commonly performed using `SFTTrainer`.
+- Models can be exported to GGUF for efficient local inference.
+- Unsloth is an excellent choice for fine-tuning modern open-source LLMs on consumer hardware.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Unsloth?
+2. Why is Unsloth faster than a standard setup?
+3. What is `FastLanguageModel`?
+4. Why do we use `load_in_4bit=True`?
+5. What does `get_peft_model()` do?
+6. Why are `q_proj` and `v_proj` common LoRA targets?
+7. What is GGUF?
+8. Why should you save the tokenizer along with the model?
+9. How does Unsloth relate to QLoRA?
+10. When would you export a model to GGUF?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Install Unsloth and verify the installation.
+
+---
+
+### Exercise 2
+
+Load a small Llama or Gemma model using `FastLanguageModel`.
+
+---
+
+### Exercise 3
+
+Apply LoRA with different values of `r` and compare the number of trainable parameters.
+
+---
+
+### Exercise 4
+
+Run a short supervised fine-tuning session on a toy dataset.
+
+---
+
+### Exercise 5
+
+Export the fine-tuned model to GGUF and test it in a local inference tool.
+
+---
+
+# Module 26 – TRL & Supervised Fine-Tuning (SFT)
+
+> **Goal**
+>
+> Learn how modern LLMs are instruction-tuned using **TRL (Transformer Reinforcement Learning Library)** and build a complete Supervised Fine-Tuning (SFT) pipeline using Hugging Face, PEFT, and Unsloth.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is TRL?
+- What is SFT?
+- Pretraining vs Fine-Tuning
+- Instruction Tuning
+- Chat Templates
+- SFTTrainer
+- TrainingArguments
+- Data Collator
+- Gradient Accumulation
+- Evaluation
+- Checkpoints
+- Logging
+- Complete Training Pipeline
+- Best Practices
+- Summary
+
+---
+
+# 📖 Story
+
+Imagine
+
+you have
+
+a student
+
+who has already
+
+completed
+
+```
+School
+
+↓
+
+College
+
+↓
+
+University
+```
+
+Now
+
+you want
+
+to make
+
+them
+
+a doctor.
+
+Would you
+
+teach
+
+```
+ABC
+
+again?
+```
+
+No.
+
+You only
+
+teach
+
+```
+Medicine
+```
+
+LLMs
+
+work
+
+the same way.
+
+A pretrained model
+
+already knows
+
+- English
+- Programming
+- Mathematics
+- Science
+
+Now
+
+we teach
+
+it
+
+how to
+
+follow instructions.
+
+This process
+
+is called
+
+```
+Supervised Fine-Tuning
+
+(SFT)
+```
+
+---
+
+# Training Stages of Modern LLMs
+
+```
+Raw Text
+
+↓
+
+Pretraining
+
+↓
+
+Base Model
+
+↓
+
+Supervised Fine-Tuning
+
+↓
+
+Instruction Model
+
+↓
+
+RLHF / DPO
+
+↓
+
+Chat Model
+```
+
+Examples
+
+```
+Llama Base
+
+↓
+
+SFT
+
+↓
+
+Llama Instruct
+```
+
+```
+Qwen Base
+
+↓
+
+SFT
+
+↓
+
+Qwen Chat
+```
+
+---
+
+# What is TRL?
+
+TRL
+
+stands for
+
+```
+Transformer
+
+Reinforcement
+
+Learning
+```
+
+Despite its name,
+
+TRL is also widely used for
+
+Supervised Fine-Tuning.
+
+It provides
+
+- SFTTrainer
+- PPOTrainer
+- DPOTrainer
+- RewardTrainer
+
+---
+
+# Why TRL?
+
+Without TRL
+
+```
+Dataset
+
+↓
+
+Tokenizer
+
+↓
+
+Training Loop
+
+↓
+
+Loss
+
+↓
+
+Optimization
+```
+
+Everything
+
+must be
+
+written manually.
+
+With TRL
+
+```
+Dataset
+
+↓
+
+SFTTrainer
+
+↓
+
+Train
+```
+
+Much simpler.
+
+---
+
+# What is Supervised Fine-Tuning?
+
+SFT means
+
+training
+
+an LLM
+
+using
+
+```
+Input
+
+↓
+
+Expected Output
+```
+
+Example
+
+```
+Question
+
+↓
+
+Answer
+```
+
+---
+
+# Example Dataset
+
+```text
+Instruction:
+
+What is AI?
+
+Response:
+
+Artificial Intelligence is...
+```
+
+The model
+
+learns
+
+to generate
+
+the response.
+
+---
+
+# Pretraining vs SFT
+
+| Pretraining | SFT |
+|-------------|-----|
+| Predict Next Token | Follow Instructions |
+| Huge Dataset | Task Dataset |
+| Trillions of Tokens | Thousands / Millions |
+| Very Expensive | Affordable |
+
+---
+
+# Instruction Tuning
+
+Instead of
+
+plain text
+
+we use
+
+structured examples.
+
+Example
+
+```text
+Instruction:
+
+Translate to French
+
+Input:
+
+Hello
+
+Output:
+
+Bonjour
+```
+
+The model
+
+learns
+
+to respond
+
+to instructions.
+
+---
+
+# Chat Format
+
+Modern LLMs
+
+expect
+
+chat-style data.
+
+Example
+
+```text
+User:
+
+Explain AI
+
+Assistant:
+
+Artificial Intelligence...
+```
+
+This is
+
+how
+
+ChatGPT,
+
+Llama,
+
+Gemma,
+
+and
+
+Qwen
+
+are trained.
+
+---
+
+# Chat Template
+
+Example
+
+```python
+messages = [
+
+{
+
+"role":"user",
+
+"content":"Explain AI"
+
+},
+
+{
+
+"role":"assistant",
+
+"content":"Artificial Intelligence..."
+
+}
+
+]
+```
+
+The tokenizer
+
+formats
+
+the conversation
+
+before training.
+
+---
+
+# Loading Dataset
+
+```python
+from datasets import load_dataset
+
+dataset = load_dataset(
+
+    "json",
+
+    data_files="train.json"
+
+)
+```
+
+---
+
+# Loading Model
+
+```python
+from unsloth import FastLanguageModel
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+
+    model_name="unsloth/Llama-3.2-3B",
+
+    load_in_4bit=True,
+
+    max_seq_length=2048
+
+)
+```
+
+---
+
+# Apply LoRA
+
+```python
+model = FastLanguageModel.get_peft_model(
+
+    model,
+
+    r=16,
+
+    lora_alpha=16,
+
+    target_modules=[
+
+        "q_proj",
+
+        "k_proj",
+
+        "v_proj",
+
+        "o_proj"
+
+    ]
+
+)
+```
+
+---
+
+# SFTTrainer
+
+The most important
+
+class
+
+in
+
+TRL.
+
+```python
+from trl import SFTTrainer
+```
+
+---
+
+# TrainingArguments
+
+```python
+from transformers import TrainingArguments
+
+training_args = TrainingArguments(
+
+    output_dir="outputs",
+
+    num_train_epochs=1,
+
+    learning_rate=2e-4,
+
+    per_device_train_batch_size=2,
+
+    gradient_accumulation_steps=4,
+
+    logging_steps=10,
+
+    save_steps=100,
+
+    bf16=True
+
+)
+```
+
+---
+
+# Important Parameters
+
+| Parameter | Purpose |
+|------------|----------|
+| learning_rate | Training Speed |
+| batch_size | Samples per Batch |
+| gradient_accumulation_steps | Simulate Larger Batch |
+| logging_steps | Print Logs |
+| save_steps | Save Checkpoints |
+| bf16 | Mixed Precision |
+
+---
+
+# Create Trainer
+
+```python
+trainer = SFTTrainer(
+
+    model=model,
+
+    tokenizer=tokenizer,
+
+    train_dataset=dataset["train"],
+
+    args=training_args
+
+)
+```
+
+---
+
+# Start Training
+
+```python
+trainer.train()
+```
+
+TRL
+
+handles
+
+- Loss
+- Optimizer
+- Scheduler
+- Checkpoints
+- Logging
+
+automatically.
+
+---
+
+# Gradient Accumulation
+
+Suppose
+
+GPU
+
+can only
+
+fit
+
+```
+Batch Size = 2
+```
+
+But
+
+you want
+
+```
+Batch Size = 8
+```
+
+Use
+
+```
+Gradient Accumulation
+
+=
+
+4
+```
+
+The model
+
+updates
+
+weights
+
+after
+
+4 mini-batches,
+
+giving an effective batch size of 8.
+
+---
+
+# Data Collator
+
+A Data Collator
+
+prepares
+
+batches
+
+before
+
+training.
+
+Responsibilities
+
+- Padding
+- Tensor Conversion
+- Batch Creation
+
+---
+
+# Evaluation
+
+```python
+trainer.evaluate()
+```
+
+Computes
+
+evaluation metrics
+
+on
+
+the validation dataset.
+
+---
+
+# Saving Model
+
+```python
+trainer.save_model(
+
+    "my_adapter"
+
+)
+```
+
+---
+
+# Complete Training Pipeline
+
+```
+Dataset
+
+↓
+
+Tokenizer
+
+↓
+
+Chat Template
+
+↓
+
+LoRA
+
+↓
+
+SFTTrainer
+
+↓
+
+Training
+
+↓
+
+Adapter
+
+↓
+
+Inference
+```
+
+---
+
+# Logging
+
+Training logs
+
+typically include
+
+```
+Loss
+
+Learning Rate
+
+Epoch
+
+Step
+
+Time
+```
+
+Useful
+
+for
+
+monitoring
+
+training progress.
+
+---
+
+# Checkpoints
+
+Training
+
+can be
+
+saved
+
+periodically.
+
+Example
+
+```
+Checkpoint-100
+
+Checkpoint-200
+
+Checkpoint-300
+```
+
+Useful
+
+if
+
+training
+
+is interrupted.
+
+---
+
+# Best Practices
+
+✅ Use
+
+instruction-style datasets.
+
+---
+
+✅ Keep
+
+the validation
+
+dataset
+
+separate.
+
+---
+
+✅ Save
+
+checkpoints
+
+regularly.
+
+---
+
+✅ Monitor
+
+loss
+
+during training.
+
+---
+
+# Common Mistakes
+
+❌ Mixing
+
+training
+
+and
+
+validation data.
+
+---
+
+❌ Forgetting
+
+chat templates.
+
+---
+
+❌ Using
+
+very high
+
+learning rates.
+
+---
+
+❌ Ignoring
+
+checkpoint saving.
+
+---
+
+# Cheat Sheet
+
+| Component | Purpose |
+|------------|----------|
+| TRL | LLM Training Library |
+| SFTTrainer | Supervised Fine-Tuning |
+| TrainingArguments | Training Configuration |
+| Dataset | Training Data |
+| Chat Template | Conversation Formatting |
+| LoRA | Efficient Fine-Tuning |
+
+---
+
+# 🤖 Complete Industry Pipeline
+
+```
+Instruction Dataset
+
+↓
+
+Chat Template
+
+↓
+
+Tokenizer
+
+↓
+
+Llama
+
+↓
+
+LoRA
+
+↓
+
+TRL
+
+↓
+
+Training
+
+↓
+
+Adapter
+
+↓
+
+GGUF
+
+↓
+
+Ollama
+```
+
+This
+
+is
+
+the workflow
+
+used
+
+for many
+
+instruction-tuned
+
+open-source LLMs.
+
+---
+
+# Summary
+
+- SFT teaches a pretrained LLM to follow instructions.
+- TRL simplifies the training process with `SFTTrainer`.
+- Chat templates format conversations in the way the model expects.
+- `TrainingArguments` control optimization, logging, checkpoints, and precision.
+- LoRA and Unsloth integrate naturally with TRL for efficient fine-tuning.
+- SFT is the first step before preference optimization techniques such as DPO or RLHF.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is Supervised Fine-Tuning?
+2. Difference between Pretraining and SFT?
+3. What is TRL?
+4. Why do we use `SFTTrainer`?
+5. What is Gradient Accumulation?
+6. Why are chat templates important?
+7. What is a Data Collator?
+8. Why do we save checkpoints?
+9. What are `TrainingArguments`?
+10. Why is LoRA commonly combined with SFT?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a small instruction dataset with at least 20 examples.
+
+---
+
+### Exercise 2
+
+Convert the dataset into chat format.
+
+---
+
+### Exercise 3
+
+Fine-tune a small model for one epoch using `SFTTrainer`.
+
+---
+
+### Exercise 4
+
+Plot the training loss from the logged metrics.
+
+---
+
+### Exercise 5
+
+Evaluate the model on five unseen prompts and compare the responses with the base model.
+
+---
